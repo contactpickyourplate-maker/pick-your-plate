@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pick Your Plate — Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #e0ddd4; font-family: Inter, system-ui, sans-serif; overscroll-behavior: none; }
+    * { box-sizing: border-box; }
+    #root { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- foods.jsx -->
+  <script type="text/babel">
+const FOOD_CATALOG = {
+  banana:     { name: 'Banana',        color: '#f6d668', accent: '#c89a1a', shape: 'crescent' },
+  toast:      { name: 'Toast',         color: '#e8c892', accent: '#9a6a32', shape: 'square' },
+  egg:        { name: 'Boiled egg',    color: '#fafafa', accent: '#f6cc54', shape: 'egg' },
+  berries:    { name: 'Blueberries',   color: '#4a5496', accent: '#2c336b', shape: 'berries' },
+  yogurt:     { name: 'Yoghurt',       color: '#f4efe4', accent: '#d8c8a4', shape: 'bowl' },
+  cereal:     { name: 'Cereal',        color: '#e8b06a', accent: '#a46624', shape: 'loops' },
+  chicken:    { name: 'Chicken',       color: '#e6c28a', accent: '#a06c2a', shape: 'nugget' },
+  cheese:     { name: 'Cheese',        color: '#f8d76a', accent: '#c48a1c', shape: 'triangle' },
+  beans:      { name: 'Beans',         color: '#a66a3a', accent: '#5c3418', shape: 'ovals' },
+  ham:        { name: 'Ham',           color: '#e8a99a', accent: '#a85b4c', shape: 'folded' },
+  tofu:       { name: 'Tofu',          color: '#f4ecd8', accent: '#b8a270', shape: 'cube' },
+  fishstick:  { name: 'Fish stick',    color: '#d4a868', accent: '#7a4a1c', shape: 'bar' },
+  carrot:     { name: 'Carrot',        color: '#e8904a', accent: '#9a4e18', shape: 'baton' },
+  cucumber:   { name: 'Cucumber',      color: '#8ab572', accent: '#3a6a2c', shape: 'coin' },
+  broccoli:   { name: 'Broccoli',      color: '#6d9a4c', accent: '#2e4e1a', shape: 'tree' },
+  corn:       { name: 'Sweetcorn',     color: '#f0cc4a', accent: '#a47818', shape: 'dots' },
+  peas:       { name: 'Peas',          color: '#a4c472', accent: '#4e7028', shape: 'triple' },
+  tomato:     { name: 'Tomato',        color: '#d44a3a', accent: '#7a1e14', shape: 'round' },
+  apple:      { name: 'Apple slice',   color: '#f4e8d0', accent: '#c66a4a', shape: 'wedge' },
+  grapes:     { name: 'Grapes',        color: '#8a5aa8', accent: '#3c2052', shape: 'cluster' },
+  strawberry: { name: 'Strawberry',    color: '#dc4a5a', accent: '#7a1828', shape: 'heart' },
+  orange:     { name: 'Orange',        color: '#e8803a', accent: '#9a4418', shape: 'segments' },
+  pasta:      { name: 'Pasta',         color: '#f0d890', accent: '#9a7028', shape: 'spiral' },
+  rice:       { name: 'Rice',          color: '#f6f0e0', accent: '#c4b488', shape: 'grains' },
+  crackers:   { name: 'Crackers',      color: '#e8c890', accent: '#9a6a28', shape: 'round' },
+  potato:     { name: 'Potato',        color: '#e4c898', accent: '#9a6c30', shape: 'oval' },
+  milk:       { name: 'Milk',          color: '#f8f4ec', accent: '#d0c4a8', shape: 'glass' },
+  raisins:    { name: 'Raisins',       color: '#5a3418', accent: '#2c1608', shape: 'ovals' },
+  // Added foods
+  tuna:         { name: 'Tuna',           color: '#e8d4b0', accent: '#8a6040', shape: 'oval' },
+  turkey:       { name: 'Turkey',         color: '#d4a878', accent: '#8a5428', shape: 'folded' },
+  hummus:       { name: 'Hummus',         color: '#e8c878', accent: '#a07830', shape: 'bowl' },
+  peanutbutter: { name: 'Peanut butter',  color: '#c89058', accent: '#7a4818', shape: 'spread' },
+  sausage:      { name: 'Sausage',        color: '#c87858', accent: '#7a3820', shape: 'bar' },
+  sweetpotato:  { name: 'Sweet potato',   color: '#e8884a', accent: '#9a4818', shape: 'oval' },
+  pepper:       { name: 'Bell pepper',    color: '#dc4a3a', accent: '#8a1818', shape: 'ring' },
+  celery:       { name: 'Celery',         color: '#8ab060', accent: '#3a6a20', shape: 'baton' },
+  cauliflower:  { name: 'Cauliflower',    color: '#f0ece0', accent: '#b0a880', shape: 'tree' },
+  edamame:      { name: 'Edamame',        color: '#7ab048', accent: '#3a6018', shape: 'pods' },
+  avocado:      { name: 'Avocado',        color: '#7aa848', accent: '#3a5818', shape: 'half' },
+  watermelon:   { name: 'Watermelon',     color: '#dc5858', accent: '#8a1828', shape: 'wedge' },
+  peach:        { name: 'Peach',          color: '#f0a870', accent: '#c05830', shape: 'round' },
+  mango:        { name: 'Mango',          color: '#f0c040', accent: '#c07818', shape: 'wedge' },
+  pear:         { name: 'Pear',           color: '#b0c870', accent: '#607830', shape: 'round' },
+  cherry:       { name: 'Cherry',         color: '#c02848', accent: '#701028', shape: 'berries' },
+  kiwi:         { name: 'Kiwi',           color: '#6a9840', accent: '#2a5010', shape: 'half' },
+  pineapple:    { name: 'Pineapple',      color: '#e8c040', accent: '#a07018', shape: 'ring' },
+  bread:        { name: 'Bread',          color: '#e8c890', accent: '#9a6830', shape: 'square' },
+  wrap:         { name: 'Wrap',           color: '#f4e8c8', accent: '#a08050', shape: 'roll' },
+  oatmeal:      { name: 'Oatmeal',        color: '#d8c090', accent: '#907840', shape: 'bowl' },
+  noodles:      { name: 'Noodles',        color: '#f0d880', accent: '#9a7828', shape: 'spiral' },
+  waffle:       { name: 'Waffle',         color: '#e8b860', accent: '#9a6818', shape: 'square' },
+  pancake:      { name: 'Pancake',        color: '#d8a860', accent: '#8a5820', shape: 'round' },
+  cottage:      { name: 'Cottage cheese', color: '#f4f0e8', accent: '#c8b890', shape: 'bowl' },
+  stringcheese: { name: 'String cheese',  color: '#f4e8b8', accent: '#c0a048', shape: 'bar' },
+  applesauce:   { name: 'Applesauce',     color: '#e8c890', accent: '#9a6030', shape: 'bowl' },
+  popcorn:      { name: 'Popcorn',        color: '#f4e068', accent: '#c09818', shape: 'cloud' },
+  pretzel:      { name: 'Pretzel',        color: '#c89050', accent: '#785018', shape: 'knot' },
+  granola:      { name: 'Granola',        color: '#d8a850', accent: '#885020', shape: 'clusters' },
+  scrambledegg:  { name: 'Scrambled eggs',  color: '#f8e070', accent: '#c09820', shape: 'cloud'   },
+  mashedpotato:  { name: 'Mashed potatoes', color: '#f0e8c8', accent: '#b8a060', shape: 'bowl'    },
+  frenchtoast:   { name: 'French toast',    color: '#d4a050', accent: '#8a5010', shape: 'square'  },
+  tatertots:     { name: 'Tater tots',      color: '#e8c060', accent: '#9a7018', shape: 'ovals'   },
+  chocolatemilk: { name: 'Chocolate milk',  color: '#5a3018', accent: '#c89058', shape: 'glass'   },
+  lasagna:       { name: 'Lasagna',         color: '#d45030', accent: '#8a2010', shape: 'square'  },
+  garlicbread:   { name: 'Garlic bread',    color: '#d4a050', accent: '#8a5820', shape: 'bar'     },
+  ramen:         { name: 'Ramen',           color: '#e8c870', accent: '#9a7828', shape: 'bowl'    },
+  eggroll:       { name: 'Egg roll',        color: '#c89050', accent: '#7a5018', shape: 'bar'     },
+  tacos:         { name: 'Tacos',           color: '#e8c060', accent: '#9a7018', shape: 'wedge'   },
+  burrito:       { name: 'Burrito',         color: '#e8d0a0', accent: '#a08040', shape: 'roll'    },
+  naan:          { name: 'Naan',            color: '#e8c888', accent: '#a07830', shape: 'oval'    },
+  butterchicken: { name: 'Butter chicken',  color: '#e87028', accent: '#c04810', shape: 'bowl'    },
+  samosa:        { name: 'Samosa',          color: '#d4a850', accent: '#8a6020', shape: 'triangle' },
+  dal:           { name: 'Dal',             color: '#d4883a', accent: '#8a4818', shape: 'bowl'    },
+};
+
+function FoodImage({ id, size = 80 }) {
+  const f = FOOD_CATALOG[id];
+  if (!f) return null;
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#ffffff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.03)', flexShrink: 0 }}>
+      <img src={`./${id}.png`} width={size} height={size} draggable={false} style={{ display: 'block', objectFit: 'cover', pointerEvents: 'none' }} />
+    </div>
+  );
+}
+const FOOD_META = {
+  banana:       { textures: ['soft'],                temps: ['room','cold'], type: 'fruit'   },
+  toast:        { textures: ['crispy'],              temps: ['hot','room'],  type: 'grains'  },
+  egg:          { textures: ['soft'],                temps: ['hot'],         type: 'protein' },
+  berries:      { textures: ['soft'],                temps: ['cold','room'], type: 'fruit'   },
+  yogurt:       { textures: ['creamy','smooth'],     temps: ['cold'],        type: 'dairy'   },
+  cereal:       { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
+  chicken:      { textures: ['crispy','soft'],       temps: ['hot'],         type: 'protein' },
+  cheese:       { textures: ['soft','firm'],         temps: ['cold','room'], type: 'dairy'   },
+  beans:        { textures: ['soft'],                temps: ['hot'],         type: 'protein' },
+  ham:          { textures: ['soft','chewy'],        temps: ['cold','room'], type: 'protein' },
+  tofu:         { textures: ['soft','firm'],         temps: ['room','hot'],  type: 'protein' },
+  fishstick:    { textures: ['crispy'],              temps: ['hot'],         type: 'protein' },
+  carrot:       { textures: ['crunchy'],             temps: ['cold','room'], type: 'veggies' },
+  cucumber:     { textures: ['crunchy'],             temps: ['cold'],        type: 'veggies' },
+  broccoli:     { textures: ['crunchy','tender'],    temps: ['hot','cold'],  type: 'veggies' },
+  corn:         { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
+  peas:         { textures: ['soft'],                temps: ['hot','cold'],  type: 'veggies' },
+  tomato:       { textures: ['juicy','soft'],        temps: ['cold','room'], type: 'veggies' },
+  apple:        { textures: ['crunchy'],             temps: ['cold','room'], type: 'fruit'   },
+  grapes:       { textures: ['firm'],                temps: ['cold'],        type: 'fruit'   },
+  strawberry:   { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
+  orange:       { textures: ['juicy'],               temps: ['cold','room'], type: 'fruit'   },
+  pasta:        { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
+  rice:         { textures: ['soft','sticky'],       temps: ['hot'],         type: 'grains'  },
+  crackers:     { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
+  potato:       { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
+  milk:         { textures: ['smooth'],              temps: ['cold'],        type: 'dairy'   },
+  raisins:      { textures: ['chewy'],               temps: ['room'],        type: 'fruit'   },
+  tuna:         { textures: ['flaky','soft'],        temps: ['cold','room'], type: 'protein' },
+  turkey:       { textures: ['soft','chewy'],        temps: ['cold','hot'],  type: 'protein' },
+  hummus:       { textures: ['creamy','smooth'],     temps: ['cold','room'], type: 'protein' },
+  peanutbutter: { textures: ['creamy','sticky'],     temps: ['room'],        type: 'protein' },
+  sausage:      { textures: ['chewy'],               temps: ['hot'],         type: 'protein' },
+  sweetpotato:  { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
+  pepper:       { textures: ['crunchy'],             temps: ['cold','room'], type: 'veggies' },
+  celery:       { textures: ['crunchy'],             temps: ['cold'],        type: 'veggies' },
+  cauliflower:  { textures: ['crunchy','soft'],      temps: ['hot','cold'],  type: 'veggies' },
+  edamame:      { textures: ['soft','firm'],         temps: ['hot','cold'],  type: 'protein' },
+  avocado:      { textures: ['creamy','soft'],       temps: ['cold','room'], type: 'fruit'   },
+  watermelon:   { textures: ['juicy'],               temps: ['cold'],        type: 'fruit'   },
+  peach:        { textures: ['soft','juicy'],        temps: ['cold','room'], type: 'fruit'   },
+  mango:        { textures: ['soft','juicy'],        temps: ['cold','room'], type: 'fruit'   },
+  pear:         { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
+  cherry:       { textures: ['firm','juicy'],        temps: ['cold'],        type: 'fruit'   },
+  kiwi:         { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
+  pineapple:    { textures: ['juicy'],               temps: ['cold'],        type: 'fruit'   },
+  bread:        { textures: ['soft'],                temps: ['room'],        type: 'grains'  },
+  wrap:         { textures: ['soft'],                temps: ['room'],        type: 'grains'  },
+  oatmeal:      { textures: ['soft','creamy'],       temps: ['hot'],         type: 'grains'  },
+  noodles:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
+  waffle:       { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
+  pancake:      { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
+  cottage:      { textures: ['creamy','soft'],       temps: ['cold'],        type: 'dairy'   },
+  stringcheese: { textures: ['chewy','firm'],        temps: ['cold','room'], type: 'dairy'   },
+  applesauce:   { textures: ['smooth'],              temps: ['cold','room'], type: 'fruit'   },
+  popcorn:      { textures: ['crunchy','fluffy'],    temps: ['room'],        type: 'grains'  },
+  pretzel:      { textures: ['crunchy','chewy'],     temps: ['room'],        type: 'grains'  },
+  granola:      { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
+  raspberries:  { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
+  scrambledegg: { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'protein' },
+  mashedpotato: { textures: ['soft','creamy'],       temps: ['hot'],         type: 'grains'  },
+  frenchtoast:  { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
+  tatertots:    { textures: ['crispy','crunchy'],    temps: ['hot'],         type: 'grains'  },
+  chocolatemilk:{ textures: ['smooth','creamy'],     temps: ['cold'],        type: 'dairy'   },
+  lasagna:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
+  garlicbread:  { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
+  ramen:        { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
+  eggroll:      { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
+  tacos:        { textures: ['crunchy','soft'],      temps: ['hot'],         type: 'grains'  },
+  burrito:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
+  naan:         { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
+  butterchicken:{ textures: ['soft','creamy'],       temps: ['hot'],         type: 'protein' },
+  samosa:       { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
+  dal:          { textures: ['soft','creamy'],       temps: ['hot'],         type: 'protein' },
+};
+Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
+  </script>
+
+  <!-- plate-shapes.jsx -->
+  <script type="text/babel">
+const PLATE_TYPES = [
+  { id: 'basic',         label: 'Basic',       caption: 'Round plate'        },
+  { id: 'divided',       label: 'Divided',     caption: 'Three sections'     },
+  { id: 'rainbow',       label: 'Rainbow',     caption: 'Color by color'     },
+  { id: 'one-new-thing', label: '1 New Thing', caption: 'Spotlight one food' },
+  { id: 'snack',         label: 'Snack',       caption: 'Smaller tray'       },
+];
+
+function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e4', rimInset = 18 }) {
+  if (type === 'divided') {
+    return (
+      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
+        <defs><clipPath id="pp-clip-div"><circle cx="50" cy="50" r="50" /></clipPath></defs>
+        <g clipPath="url(#pp-clip-div)" stroke="#b0b0b0" strokeWidth="1.5" strokeLinecap="round">
+          <line x1="50" y1="50" x2="50" y2="0" />
+          <line x1="50" y1="50" x2="6.7"  y2="75" />
+          <line x1="50" y1="50" x2="93.3" y2="75" />
+        </g>
+      </svg>
+    );
+  }
+  if (type === 'rainbow') {
+    const wedges = ['oklch(0.85 0.08 25)','oklch(0.87 0.09 55)','oklch(0.90 0.09 95)','oklch(0.85 0.07 145)','oklch(0.84 0.06 230)','oklch(0.82 0.06 310)'];
+    const cx = 50, cy = 50, r = 50;
+    const toXY = (deg) => [cx + r * Math.cos((deg - 90) * Math.PI / 180), cy + r * Math.sin((deg - 90) * Math.PI / 180)];
+    return (
+      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
+        <defs><clipPath id="pp-clip-rain"><circle cx="50" cy="50" r="50" /></clipPath></defs>
+        <g clipPath="url(#pp-clip-rain)">
+          {wedges.map((color, i) => {
+            const [x0, y0] = toXY(i * 60), [x1, y1] = toXY((i + 1) * 60);
+            return <path key={i} fill={color} opacity={0.55} d={`M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z`} />;
+          })}
+          {[0,60,120,180,240,300].map((a, i) => { const [x, y] = toXY(a); return <line key={i} x1="50" y1="50" x2={x} y2={y} stroke={rimColor} strokeWidth="0.35" opacity=".6" />; })}
+        </g>
+      </svg>
+    );
+  }
+  if (type === 'one-new-thing') {
+    return (
+      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
+        <polygon points="50,28 54.5,41.5 69,41.5 57.5,50 62,63.5 50,55 38,63.5 42.5,50 31,41.5 45.5,41.5" fill="#f5c842" opacity="0.9" />
+      </svg>
+    );
+  }
+  return null;
+}
+
+function PlateChip({ type, size = 40 }) {
+  const scale = type === 'snack' ? 0.78 : 1;
+  const px = size * scale;
+  return (
+    <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: px, height: px, borderRadius: '50%', position: 'relative', background: 'radial-gradient(circle at 35% 30%, #fff 0%, #ffffff 55%, #e4e4e4 100%)', boxShadow: '0 1px 3px rgba(60,40,20,.12), inset 0 1px 0 rgba(255,255,255,.6)' }}>
+        <div style={{ position: 'absolute', inset: Math.max(3, px * 0.18), borderRadius: '50%', boxShadow: 'inset 0 0 0 1px #e4e4e4', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: Math.max(3, px * 0.18) }}><PlateShape type={type} rimInset={0} /></div>
+      </div>
+    </div>
+  );
+}
+
+function PlatePicker({ value, onChange, displayFont = 'Fraunces, serif', accent = '#2a241c' }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('pointerdown', h);
+    return () => document.removeEventListener('pointerdown', h);
+  }, [open]);
+  const current = PLATE_TYPES.find(p => p.id === value) || PLATE_TYPES[0];
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e4dcc8', background: '#fbf6ea', padding: '6px 14px 6px 8px', borderRadius: 899, cursor: 'pointer', boxShadow: '0 1px 2px rgba(60,40,20,.04)' }}>
+        <PlateChip type={current.id} size={28} />
+        <span style={{ fontFamily: displayFont, fontSize: 28, fontWeight: 500, letterSpacing: -.3, color: '#2a241c' }}>Plates</span>
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40, background: '#fbf6ea', border: '1px solid #e4dcc8', borderRadius: 16, padding: 10, display: 'grid', gridTemplateColumns: 'repeat(5, 110px)', gap: 6, boxShadow: '0 12px 40px rgba(60,40,20,.12), 0 2px 8px rgba(60,40,20,.06)' }}>
+          {PLATE_TYPES.map(pt => {
+            const selected = pt.id === value;
+            return (
+              <button key={pt.id} onClick={() => { onChange(pt.id); setOpen(false); }} style={{ border: selected ? `1.5px solid ${accent}` : '1.5px solid transparent', background: selected ? '#fff' : 'transparent', borderRadius: 12, padding: '12px 8px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'background .15s, border-color .15s' }} onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = 'rgba(255,255,255,.5)'; }} onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = 'transparent'; }}>
+                <PlateChip type={pt.id} size={56} />
+                <div style={{ fontFamily: displayFont, fontSize: 15, fontWeight: 500, color: '#2a241c', letterSpacing: -.1 }}>{pt.label}</div>
+                <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 11, color: '#8a7c66', lineHeight: 1.2, textAlign: 'center' }}>{pt.caption}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+Object.assign(window, { PLATE_TYPES, PlateShape, PlatePicker, PlateChip });
+  </script>
+
+  <!-- child-app.jsx -->
+  <script type="text/babel">
+const CHILD_COLORS = {
+  cream: '#EDEADF', paper: '#F5F3ED', ink: '#2a241c', muted: '#8a7c66',
+  line: '#D8D4C8', sage: '#A9D18E', sageDeep: '#6B9E52',
+  plate: '#ffffff', plateRim: '#e4e4e4', plateShadow: 'rgba(0,0,0,.10)',
+};
+
+function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic', itemSize = 149 }) {
+  const plateRef = React.useRef(null);
+  const visualSize = plateType === 'snack' ? size * 0.72 : size;
+  const [jiggling, setJiggling] = React.useState(false);
+  const onItemPointerDown = (e, item) => {
+    e.stopPropagation();
+    if (jiggling) { onRemove && onRemove(item.uid); return; }
+    const el = e.currentTarget;
+    const plate = plateRef.current;
+    if (!plate) return;
+    el.setPointerCapture(e.pointerId);
+    const r0 = plate.getBoundingClientRect();
+    const grabX = (e.clientX - r0.left) / r0.width * 100 - item.x;
+    const grabY = (e.clientY - r0.top) / r0.height * 100 - item.y;
+    const start = { x: e.clientX, y: e.clientY };
+    let moved = false;
+    const longPress = setTimeout(() => { if (!moved) setJiggling(true); }, 500);
+    const move = (ev) => {
+      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+      if (!moved && Math.hypot(dx, dy) > 4) { moved = true; clearTimeout(longPress); }
+      if (!moved) return;
+      const r = plate.getBoundingClientRect();
+      const nx_raw = (ev.clientX - r.left) / r.width * 100 - grabX;
+      const ny_raw = (ev.clientY - r.top) / r.height * 100 - grabY;
+      const ddx = nx_raw - 50, ddy = ny_raw - 50;
+      const dist = Math.hypot(ddx, ddy);
+      let nx = nx_raw, ny = ny_raw;
+      if (dist > 47) {
+        el.dataset.willRemove = '1';
+        nx = 50 + Math.cos(Math.atan2(ddy, ddx)) * 47;
+        ny = 50 + Math.sin(Math.atan2(ddy, ddx)) * 47;
+      } else { delete el.dataset.willRemove; }
+      onMove && onMove(item.uid, nx, ny);
+    };
+    const up = () => {
+      clearTimeout(longPress);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      if (!moved) { onRemove && onRemove(item.uid); return; }
+      if (el.dataset.willRemove) { delete el.dataset.willRemove; onRemove && onRemove(item.uid); }
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  };
+  return (
+    <div ref={plateRef} onClick={() => { if (jiggling) setJiggling(false); }} style={{ position: 'relative', width: visualSize, height: visualSize, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, #fff 0%, ${CHILD_COLORS.plate} 55%, ${CHILD_COLORS.plateRim} 100%)`, boxShadow: active ? `0 12px 48px ${CHILD_COLORS.plateShadow}, 0 0 0 4px ${CHILD_COLORS.sage}33, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)` : `0 10px 40px ${CHILD_COLORS.plateShadow}, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)`, transition: 'box-shadow .25s, width .25s, height .25s' }}>
+      <div style={{ position: 'absolute', inset: 18, borderRadius: '50%', boxShadow: `inset 0 0 0 1px ${CHILD_COLORS.plateRim}, inset 0 0 0 2px rgba(255,255,255,.4)`, pointerEvents: 'none' }} />
+      <PlateShape type={plateType} plateColor={CHILD_COLORS.plate} rimColor={CHILD_COLORS.plateRim} />
+      {items.map((it, i) => (
+        <div key={it.uid} onPointerDown={(e) => onItemPointerDown(e, it)} style={{ position: 'absolute', left: `${it.x}%`, top: `${it.y}%`, transform: 'translate(-50%, -50%)', cursor: jiggling ? 'pointer' : 'grab', touchAction: 'none', userSelect: 'none', animation: jiggling ? `ppJiggle .35s ease-in-out ${i * 0.07}s infinite alternate` : 'ppPlacedIn .32s cubic-bezier(.2,.8,.3,1.1)' }}>
+          <FoodImage id={it.id} size={itemSize} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PlateHero({ size = 140 }) {
+  return <img src="./platey_home_transparent.png" width={size} style={{ display: 'block' }} />;
+}
+
+function TrayCard({ food, onDragStart, isSelected }) {
+  const [pressed, setPressed] = React.useState(false);
+  return (
+    <div draggable onPointerDown={() => setPressed(true)} onPointerUp={() => setPressed(false)} onPointerLeave={() => setPressed(false)} onDragStart={(e) => onDragStart(e, food.id)}
+      style={{ background: isSelected ? '#E4F3DC' : '#fff', borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'grab', boxShadow: pressed ? '0 10px 28px rgba(60,40,20,.18)' : '0 2px 8px rgba(60,40,20,.06), 0 1px 2px rgba(60,40,20,.08)', transform: pressed ? 'scale(1.06)' : 'scale(1)', transition: 'transform .15s, box-shadow .15s, background .15s', userSelect: 'none', position: 'relative', opacity: 1 }}>
+      <FoodImage id={food.id} size={92} />
+      <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 15, fontWeight: 600, color: CHILD_COLORS.ink, textAlign: 'center' }}>{FOOD_CATALOG[food.id].name}</div>
+      {isSelected && (
+        <div style={{ position: 'absolute', top: 10, right: 10, width: 22, height: 22, borderRadius: '50%', background: CHILD_COLORS.sage, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,.15)' }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.2l2.5 2.5L9.8 3.5"/></svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IPadFrame({ children, width = 1180, height = 820, bg = CHILD_COLORS.cream }) {
+  return (
+    <div style={{ width, height, borderRadius: 44, background: '#d8d4cc', padding: 14, boxSizing: 'border-box', boxShadow: '0 32px 80px rgba(40,30,20,.25), 0 0 0 1px rgba(0,0,0,.08)', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', borderRadius: 30, background: bg, overflow: 'hidden', position: 'relative', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.06)' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PlateSelectScreen({ childName, onSelect, T }) {
+  const [hovered, setHovered] = React.useState(null);
+  const [chosen, setChosen] = React.useState(null);
+  const pick = (id) => { setChosen(id); setTimeout(() => onSelect(id), 380); };
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '40px 60px', animation: 'ppSelectIn .3s ease-out' }}>
+      <img src="./bg_food_pattern.png" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.1, mixBlendMode: 'multiply', pointerEvents: 'none' }} />
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', marginBottom: 36 }}>
+        <div style={{ fontFamily: T.displayFont, fontSize: 42, fontWeight: 500, letterSpacing: -.5, color: CHILD_COLORS.ink }}>Hi {childName}!</div>
+        <div style={{ fontFamily: T.displayFont, fontSize: 24, color: CHILD_COLORS.muted, marginTop: 8 }}>Which plate today?</div>
+      </div>
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 18 }}>
+        {PLATE_TYPES.map(pt => {
+          const active = hovered === pt.id || chosen === pt.id;
+          return (
+            <button key={pt.id} onClick={() => pick(pt.id)} onPointerEnter={() => setHovered(pt.id)} onPointerLeave={() => setHovered(null)}
+              style={{ border: active ? `2.5px solid ${T.accent}` : '2.5px solid transparent', background: '#fff', borderRadius: 28, padding: '22px 18px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, minWidth: 168, transform: chosen === pt.id ? 'scale(1.09)' : active ? 'scale(1.04)' : 'scale(1)', transition: 'transform .2s, border-color .15s, background .15s, box-shadow .15s', boxShadow: active ? '0 12px 32px rgba(60,40,20,.13)' : '0 2px 8px rgba(60,40,20,.06)' }}>
+              <PlateChip type={pt.id} size={96} />
+              <div style={{ fontFamily: T.displayFont, fontSize: 19, fontWeight: 500, color: CHILD_COLORS.ink, letterSpacing: -.2 }}>{pt.label}</div>
+              <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 12, color: CHILD_COLORS.muted, textAlign: 'center', lineHeight: 1.3 }}>{pt.caption}</div>
+            </button>
+          );
+        })}
+      </div>
+      <img src="./platey_home_transparent.png" width={110} style={{ position: 'absolute', bottom: 36, right: 56, display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out infinite', pointerEvents: 'none', zIndex: 1 }} />
+    </div>
+  );
+}
+
+function PlateyReaction({ count }) {
+  const prev = React.useRef(count);
+  const [celebrate, setCelebrate] = React.useState(false);
+  React.useEffect(() => {
+    if (count >= 3 && prev.current < 3) { setCelebrate(true); setTimeout(() => setCelebrate(false), 1400); }
+    prev.current = count;
+  }, [count]);
+  const state = celebrate ? 'happy' : count === 0 ? 'welcome' : count <= 2 ? 'watching' : 'settled';
+  return (
+    <>
+      <div style={{ position: 'absolute', pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: state === 'welcome' ? 1 : 0, transition: 'opacity .4s ease', zIndex: 2 }}>
+        <img src="./platey_home_transparent.png" width={160} style={{ display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out infinite' }} />
+      </div>
+      <div style={{ position: 'absolute', bottom: -8, left: -8, pointerEvents: 'none', opacity: state === 'happy' ? 1 : 0, transition: 'opacity .25s ease', zIndex: 2 }}>
+        <img src="./platey_celebration_transparent.png" width={88} style={{ display: 'block', animation: 'ppPlateyBounce .6s cubic-bezier(.2,.8,.3,1.2) both' }} />
+      </div>
+    </>
+  );
+}
+
+function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {}, onSubmit, sentMenu }) {
+  const T = {
+    cream: tweaks.bg || CHILD_COLORS.cream, paper: tweaks.paper || CHILD_COLORS.paper,
+    accent: tweaks.accent || CHILD_COLORS.sageDeep, accentSoft: tweaks.accentSoft || CHILD_COLORS.sage,
+    displayFont: tweaks.displayFont || 'Fraunces, serif', uiFont: tweaks.uiFont || 'Nunito, system-ui',
+    greeting: tweaks.greeting || `Hello, ${childName}`,
+    sendLabel: tweaks.sendLabel || "I'm Done", emptyLabel: tweaks.emptyLabel || 'Pick your plate',
+  };
+  const [menuItems, setMenuItems] = React.useState(sentMenu?.items?.length ? sentMenu.items : []);
+  const [items, setItems] = React.useState([]);
+  const [confirming, setConfirming] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
+  const [dragActive, setDragActive] = React.useState(false);
+  const [draggingId, setDraggingId] = React.useState(null);
+  const [plateType, setPlateType] = React.useState('basic');
+  const [step, setStep] = React.useState('pick-plate');
+  const [tappedId, setTappedId] = React.useState(null);
+  const plateRef = React.useRef(null);
+  const uidRef = React.useRef(10);
+  React.useEffect(() => {
+    if (sentMenu?.plateType) setPlateType(sentMenu.plateType);
+    if (sentMenu?.items?.length) setMenuItems(sentMenu.items);
+  }, [sentMenu]);
+
+  const onDragStart = (e, id) => {
+    e.dataTransfer.setData('text/food', id);
+    const foodCircle = e.currentTarget.querySelector('img')?.parentElement;
+    if (foodCircle) {
+      const size = foodCircle.offsetWidth;
+      const ghost = foodCircle.cloneNode(true);
+      Object.assign(ghost.style, {
+        position: 'fixed', top: '-9999px', left: '-9999px',
+        width: size + 'px', height: size + 'px',
+        borderRadius: '50%', overflow: 'hidden', pointerEvents: 'none',
+      });
+      document.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, size / 2, size / 2);
+      requestAnimationFrame(() => document.body.removeChild(ghost));
+    }
+    setDraggingId(id);
+    setDragActive(true);
+  };
+  const onDragOver = (e) => e.preventDefault();
+  const onDrop = (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/food') || draggingId;
+    if (!id || !plateRef.current) return;
+    const r = plateRef.current.getBoundingClientRect();
+    const cx = (e.clientX - r.left) / r.width * 100;
+    const cy = (e.clientY - r.top) / r.height * 100;
+    const dx = cx - 50, dy = cy - 50;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 47) {
+      const a = Math.atan2(dy, dx);
+      setItems(xs => [...xs, { uid: uidRef.current++, id, x: 50 + Math.cos(a) * 47, y: 50 + Math.sin(a) * 47 }]);
+    } else {
+      setItems(xs => [...xs, { uid: uidRef.current++, id, x: cx, y: cy }]);
+    }
+    setDragActive(false); setDraggingId(null);
+  };
+  const onDragEnd = () => { setDragActive(false); setDraggingId(null); };
+  const onTapAdd = (id) => {
+    if (items.some(it => it.id === id)) return;
+    // item radius ~13% of plate coords; keep centers ≥28% apart and ≥13% from edge
+    const candidates = [];
+    for (let x = 18; x <= 82; x += 7)
+      for (let y = 18; y <= 82; y += 7)
+        if (Math.hypot(x - 50, y - 50) <= 34) candidates.push([x, y]);
+    const [x, y] = candidates.reduce((best, [cx, cy]) => {
+      const minDist = items.length === 0 ? Infinity
+        : Math.min(...items.map(it => Math.hypot(it.x - cx, it.y - cy)));
+      return minDist > best[2] ? [cx, cy, minDist] : best;
+    }, [50, 50, -1]);
+    setItems(xs => [...xs, { uid: uidRef.current++, id, x, y }]);
+  };
+  const removeItem = (uid) => setItems(xs => xs.filter(x => x.uid !== uid));
+  const moveItem = (uid, x, y) => setItems(xs => xs.map(it => it.uid === uid ? { ...it, x, y } : it));
+  const selectedIds = new Set(items.map(it => it.id));
+
+  return (
+    <IPadFrame width={width} height={height} bg={T.cream}>
+      <style>{`
+        @keyframes ppPlacedIn { 0%{transform:translate(-50%,-50%) scale(1.3);opacity:0} 60%{transform:translate(-50%,-50%) scale(.96);opacity:1} 100%{transform:translate(-50%,-50%) scale(1);opacity:1} }
+        @keyframes ppFadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes ppConfetti { 0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1} 100%{transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(.4);opacity:0} }
+        @keyframes ppFall { 0%{transform:translate(0,-12px) rotate(0deg);opacity:0} 10%{opacity:1} 88%{opacity:.9} 100%{transform:translate(var(--fdx),870px) rotate(var(--fr));opacity:0} }
+        @keyframes ppSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes ppWobble { 0%{transform:rotate(0deg)} 18%{transform:rotate(-2.5deg)} 36%{transform:rotate(2.5deg)} 54%{transform:rotate(-1.5deg)} 72%{transform:rotate(1.5deg)} 86%{transform:rotate(-.5deg)} 100%{transform:rotate(0deg)} }
+        @keyframes ppTap { 0%{transform:scale(1)} 40%{transform:scale(1.15)} 100%{transform:scale(1)} }
+        @keyframes ppJiggle { 0%{transform:translate(-50%,-50%) rotate(-3deg)} 100%{transform:translate(-50%,-50%) rotate(3deg)} }
+        @keyframes ppPlateyBounce { 0%{transform:scale(.75) translateY(14px);opacity:0} 60%{transform:scale(1.06) translateY(-5px);opacity:1} 80%{transform:scale(.97) translateY(2px)} 100%{transform:scale(1) translateY(0)} }
+        @keyframes ppWelcomeWave { 0%,100%{transform:rotate(0deg)} 15%{transform:rotate(-7deg)} 30%{transform:rotate(7deg)} 45%{transform:rotate(-7deg)} 60%{transform:rotate(5deg)} 75%{transform:rotate(-2deg)} 88%{transform:rotate(1deg)} }
+        @keyframes ppPlateyWatch { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-7px) rotate(4deg)} }
+        @keyframes ppSelectIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+      `}</style>
+      {step === 'pick-plate'
+        ? <PlateSelectScreen childName={childName} onSelect={(id) => { setPlateType(id); setStep('build'); }} T={T} />
+        : (
+      <div style={{ width: '100%', height: '100%', display: 'flex', fontFamily: 'Nunito, system-ui', color: CHILD_COLORS.ink }}>
+        {/* plate panel */}
+        <div ref={plateRef} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd} style={{ width: '56%', height: '100%', display: 'flex', flexDirection: 'column', padding: '32px 40px', position: 'relative' }}>
+          <img src="./bg_food_pattern.png" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12, mixBlendMode: 'multiply', pointerEvents: 'none', zIndex: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative', zIndex: 10 }}>
+            <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, letterSpacing: -.3 }}>Hi {childName}!</div>
+            <div style={{ flex: 1 }} />
+            {items.length > 0 && (
+              <button onClick={() => { setItems([]); setStep('pick-plate'); }} style={{ border: 'none', background: 'transparent', fontFamily: 'Nunito, system-ui', fontSize: 13, fontWeight: 600, color: CHILD_COLORS.muted, cursor: 'pointer', padding: '6px 10px' }}>Start over</button>
+            )}
+            <button onClick={() => setStep('pick-plate')} style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e4dcc8', background: '#fbf6ea', padding: '6px 12px 6px 8px', borderRadius: 899, cursor: 'pointer', boxShadow: '0 1px 2px rgba(60,40,20,.04)' }}>
+              <PlateChip type={plateType} size={28} />
+              <span style={{ fontFamily: 'Nunito, system-ui', fontSize: 14, fontWeight: 600, color: CHILD_COLORS.muted }}>Change plate</span>
+            </button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: -20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+              <Plate size={504} items={items} onRemove={removeItem} onMove={moveItem} active={dragActive} plateType={plateType} />
+              {plateType === 'one-new-thing' && (
+                <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, color: CHILD_COLORS.muted, letterSpacing: -.3, textAlign: 'center' }}>Try something new and yummy!</div>
+              )}
+            </div>
+            <PlateyReaction count={items.length} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 8, minHeight: 68, position: 'relative', zIndex: 1 }}>
+            {items.length === 0 && menuItems.length > 0 && (
+              <div style={{ fontFamily: T.displayFont, fontSize: 28, color: CHILD_COLORS.ink, fontWeight: 500, letterSpacing: -.3 }}>Drag food to plate</div>
+            )}
+            {items.length > 0 && (
+              <button onClick={() => { setSending(true); setTimeout(() => setConfirming(true), 700); onSubmit && onSubmit({ items, plateType, submittedAt: Date.now() }); }} style={{ border: 'none', padding: '18px 40px', borderRadius: 899, fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, background: T.accent, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', animation: 'ppFadeIn .25s ease' }}>
+                {T.sendLabel}
+              </button>
+            )}
+          </div>
+        </div>
+        {/* food tray */}
+        <div style={{ width: '44%', height: '100%', background: T.paper, borderLeft: `1px solid ${CHILD_COLORS.line}`, padding: '32px 28px', display: 'flex', flexDirection: 'column', boxShadow: 'inset 4px 0 12px rgba(60,40,20,.03)' }}>
+          <div style={{ fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, marginBottom: 18 }}>{childName}'s Menu</div>
+          {menuItems.length > 0 && selectedIds.size === menuItems.length && (
+            <div style={{ marginBottom: 14, padding: '10px 14px', background: T.accent + '18', borderRadius: 12, fontFamily: 'Nunito, system-ui', fontSize: 14, fontWeight: 600, color: T.accent, textAlign: 'center' }}>You picked everything! Hit the button when ready.</div>
+          )}
+          <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignContent: 'start' }}>
+            {menuItems.length === 0
+              ? <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10, opacity: .45, pointerEvents: 'none' }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={CHILD_COLORS.muted} strokeWidth="1.8" strokeLinecap="round"><circle cx="18" cy="18" r="14"/><path d="M18 11v7l4 4"/></svg>
+                  <div style={{ fontFamily: T.displayFont, fontSize: 16, color: CHILD_COLORS.muted, textAlign: 'center', lineHeight: 1.4 }}>Waiting for today's menu…</div>
+                </div>
+              : menuItems.map(id => (
+                  <div key={id} onClick={() => { setTappedId(id); setTimeout(() => setTappedId(null), 250); onTapAdd(id); }} style={{ animation: tappedId === id ? 'ppTap .25s cubic-bezier(.2,.8,.3,1.2)' : 'none' }}>
+                    <TrayCard food={{ id }} onDragStart={onDragStart} isSelected={selectedIds.has(id)} />
+                  </div>
+                ))
+            }
+          </div>
+        </div>
+        {/* sending spinner */}
+        {sending && !confirming && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: `${T.cream}f2`, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, animation: 'ppFadeIn .2s ease-out' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', border: `3.5px solid ${CHILD_COLORS.line}`, borderTopColor: T.accent, animation: 'ppSpin .75s linear infinite' }} />
+            <div style={{ fontFamily: T.uiFont, fontSize: 16, color: CHILD_COLORS.muted, fontWeight: 500, letterSpacing: .1 }}>Sending your plate…</div>
+          </div>
+        )}
+        {/* confirmation overlay */}
+        {confirming && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: `${T.cream}f2`, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            {[
+              { l:'4%',  d:'0s',    dur:'3.1s', bg:'oklch(0.78 0.12 145)', w:8,  h:12, r:'2px', fdx:'18px',  fr:'240deg' },
+              { l:'9%',  d:'.6s',   dur:'2.8s', bg:'oklch(0.82 0.14 60)',  w:7,  h:7,  r:'50%', fdx:'-12px', fr:'180deg' },
+              { l:'16%', d:'1.2s',  dur:'3.4s', bg:'oklch(0.76 0.12 30)',  w:6,  h:10, r:'2px', fdx:'22px',  fr:'300deg' },
+              { l:'22%', d:'.3s',   dur:'2.6s', bg:'oklch(0.8 0.1 200)',   w:9,  h:9,  r:'50%', fdx:'-20px', fr:'200deg' },
+              { l:'29%', d:'.9s',   dur:'3.0s', bg:'oklch(0.78 0.13 90)',  w:7,  h:11, r:'2px', fdx:'15px',  fr:'260deg' },
+              { l:'35%', d:'.1s',   dur:'3.3s', bg:'oklch(0.74 0.14 25)',  w:8,  h:8,  r:'50%', fdx:'-18px', fr:'320deg' },
+              { l:'42%', d:'.7s',   dur:'2.7s', bg:'oklch(0.8 0.1 280)',   w:6,  h:9,  r:'2px', fdx:'24px',  fr:'180deg' },
+              { l:'48%', d:'1.4s',  dur:'3.2s', bg:'oklch(0.78 0.12 145)', w:10, h:10, r:'50%', fdx:'-10px', fr:'270deg' },
+              { l:'55%', d:'.5s',   dur:'2.9s', bg:'oklch(0.82 0.14 60)',  w:7,  h:12, r:'2px', fdx:'16px',  fr:'220deg' },
+              { l:'61%', d:'1.1s',  dur:'3.5s', bg:'oklch(0.76 0.12 30)',  w:8,  h:8,  r:'50%', fdx:'-22px', fr:'300deg' },
+              { l:'67%', d:'.2s',   dur:'3.0s', bg:'oklch(0.8 0.1 200)',   w:6,  h:10, r:'2px', fdx:'20px',  fr:'240deg' },
+              { l:'73%', d:'.8s',   dur:'2.7s', bg:'oklch(0.78 0.13 90)',  w:9,  h:9,  r:'50%', fdx:'-14px', fr:'200deg' },
+              { l:'79%', d:'1.3s',  dur:'3.1s', bg:'oklch(0.74 0.14 25)',  w:7,  h:11, r:'2px', fdx:'12px',  fr:'280deg' },
+              { l:'85%', d:'.4s',   dur:'2.8s', bg:'oklch(0.8 0.1 280)',   w:8,  h:8,  r:'50%', fdx:'-20px', fr:'180deg' },
+              { l:'91%', d:'1.0s',  dur:'3.3s', bg:'oklch(0.78 0.12 145)', w:6,  h:9,  r:'2px', fdx:'18px',  fr:'320deg' },
+              { l:'96%', d:'.6s',   dur:'2.9s', bg:'oklch(0.82 0.14 60)',  w:10, h:10, r:'50%', fdx:'-16px', fr:'240deg' },
+              { l:'12%', d:'1.6s',  dur:'3.2s', bg:'oklch(0.76 0.12 30)',  w:7,  h:11, r:'2px', fdx:'22px',  fr:'200deg' },
+              { l:'32%', d:'2.0s',  dur:'2.8s', bg:'oklch(0.8 0.1 200)',   w:8,  h:8,  r:'50%', fdx:'-18px', fr:'260deg' },
+              { l:'58%', d:'1.8s',  dur:'3.4s', bg:'oklch(0.78 0.13 90)',  w:6,  h:10, r:'2px', fdx:'14px',  fr:'300deg' },
+              { l:'82%', d:'2.2s',  dur:'3.0s', bg:'oklch(0.74 0.14 25)',  w:9,  h:9,  r:'50%', fdx:'-12px', fr:'220deg' },
+            ].map((c, i) => (
+              <div key={`fall-${i}`} style={{ position: 'absolute', top: 0, left: c.l, width: c.w, height: c.h, borderRadius: c.r, background: c.bg, '--fdx': c.fdx, '--fr': c.fr, animation: `ppFall ${c.dur} ${c.d} infinite both`, pointerEvents: 'none' }} />
+            ))}
+            {[
+              { cx:'-80px',  cy:'-120px', cr:'320deg',  bg:'oklch(0.78 0.12 145)', w:10, h:10, r:'50%', delay:0 },
+              { cx:'90px',   cy:'-100px', cr:'-200deg', bg:'oklch(0.78 0.14 60)',  w:8,  h:14, r:'3px', delay:.05 },
+              { cx:'-110px', cy:'20px',   cr:'260deg',  bg:'oklch(0.82 0.12 30)',  w:12, h:7,  r:'3px', delay:.08 },
+              { cx:'120px',  cy:'40px',   cr:'-300deg', bg:'oklch(0.76 0.1 200)',  w:9,  h:9,  r:'50%', delay:.03 },
+              { cx:'-60px',  cy:'110px',  cr:'180deg',  bg:'oklch(0.8 0.13 90)',   w:11, h:8,  r:'3px', delay:.1 },
+              { cx:'70px',   cy:'120px',  cr:'-140deg', bg:'oklch(0.78 0.12 145)', w:8,  h:12, r:'3px', delay:.06 },
+              { cx:'-130px', cy:'-40px',  cr:'220deg',  bg:'oklch(0.74 0.14 25)',  w:9,  h:9,  r:'50%', delay:.12 },
+              { cx:'140px',  cy:'-60px',  cr:'-260deg', bg:'oklch(0.8 0.1 280)',   w:10, h:7,  r:'3px', delay:.04 },
+            ].map((c, i) => (
+              <div key={i} style={{ position: 'absolute', top: '50%', left: '50%', width: c.w, height: c.h, borderRadius: c.r, background: c.bg, '--cx': c.cx, '--cy': c.cy, '--cr': c.cr, animation: `ppConfetti .9s cubic-bezier(.2,.8,.3,1) ${c.delay}s both`, pointerEvents: 'none' }} />
+            ))}
+            <img src="./platey_celebration_transparent.png" style={{ width: 150, display: 'block', margin: '0 auto', animation: 'ppPlateyBounce .6s cubic-bezier(.2,.8,.3,1.2) both' }} />
+            <div style={{ fontFamily: T.displayFont, fontSize: 34, fontWeight: 500, letterSpacing: -.4, color: CHILD_COLORS.ink, lineHeight: 1.15, textAlign: 'center' }}>Your plate is on the way!</div>
+            <Plate size={430} items={items} onRemove={() => {}} plateType={plateType} itemSize={119} />
+            <button onClick={() => { setItems([]); setMenuItems([]); setConfirming(false); setSending(false); setStep('pick-plate'); setPlateType('basic'); }} style={{ border: 'none', padding: '14px 42px', borderRadius: 899, fontFamily: T.displayFont, fontSize: 18, fontWeight: 500, letterSpacing: -.2, background: T.accent, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 6px 20px rgba(40,80,40,.15)', transition: 'transform .15s', userSelect: 'none', marginTop: 16 }} onPointerDown={e => e.currentTarget.style.transform='scale(.97)'} onPointerUp={e => e.currentTarget.style.transform='scale(1)'} onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}>
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+        )
+      }
+    </IPadFrame>
+  );
+}
+Object.assign(window, { ChildApp, Plate, TrayCard, IPadFrame, CHILD_COLORS });
+  </script>
+
+  <!-- caretaker-app.jsx -->
+  <script type="text/babel">
+const CARE_COLORS = {
+  bg: '#EDEADF', card: '#ffffff', surface: '#F5F3ED',
+  ink: '#2a241c', muted: '#8a7c66', mutedStrong: '#5a4e3c',
+  line: '#D8D4C8', lineSoft: '#ECEAE2',
+  sage: '#A9D18E', sageDeep: '#6B9E52', sageSoft: '#E4F3DC',
+};
+const careFont = 'Inter, -apple-system, system-ui, sans-serif';
+const serifFont = 'Fraunces, ui-serif, Georgia, serif';
+
+// ─── Design System tokens ────────────────────────────────────────────────────
+const DS = {
+  // Type scale (6 stops)
+  text: { xs: 11, sm: 13, md: 15, lg: 18, xl: 22, '2xl': 28 },
+  // Spacing (4 px grid)
+  sp: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40 },
+  // Border radii
+  rad: { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 },
+  // Shadows
+  shadow: {
+    sm:  '0 1px 3px rgba(0,0,0,.06)',
+    md:  '0 4px 14px rgba(0,0,0,.08)',
+    lg:  '0 8px 28px rgba(0,0,0,.14)',
+    btn: '0 4px 14px rgba(40,80,40,.15)',
+  },
+  // Component rules
+  btn: { padding: '13px 20px', paddingFull: '14px', radius: 12, fontSize: 15, fontWeight: 600 },
+  card: { padding: 16, radius: 16 },
+  input: { padding: '11px 14px', radius: 12 },
+};
+
+function CareStatusBar() {
+  return (
+    <div style={{ height: 54, padding: '20px 32px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontFamily: careFont, fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink, position: 'relative', zIndex: 5 }}>
+      <span>9:41</span>
+      <img src="./pyp_logo.png" style={{ position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)', width: 44, display: 'block' }} />
+      <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+        <svg width="17" height="11" viewBox="0 0 17 11" fill={CARE_COLORS.ink}><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="6" rx="0.5"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5"/><rect x="13.5" y="0" width="3" height="11" rx="0.5"/></svg>
+        <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke={CARE_COLORS.ink} strokeOpacity=".35"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill={CARE_COLORS.ink}/></svg>
+      </div>
+    </div>
+  );
+}
+
+function CareFrame({ children, width = 402, height = 874 }) {
+  return (
+    <div style={{ width, height, borderRadius: 52, background: '#1a1612', padding: 8, boxSizing: 'border-box', boxShadow: '0 30px 70px rgba(40,30,20,.25), 0 0 0 1px rgba(0,0,0,.15)', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', borderRadius: 44, background: CARE_COLORS.bg, overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)', width: 120, height: 34, borderRadius: 20, background: '#000', zIndex: 50 }} />
+        {children}
+        <div style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', width: 134, height: 5, borderRadius: 3, background: 'rgba(0,0,0,.3)', zIndex: 50 }} />
+      </div>
+    </div>
+  );
+}
+
+function CareTabBar({ active, onTab, hasActivity }) {
+  const tabs = [
+    { id: 'today', label: 'Menus', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/></svg> },
+    { id: 'notification', label: 'Activity', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M4 8a7 7 0 0 1 14 0v5l2 2H2l2-2V8z"/><path d="M9 18a2 2 0 0 0 4 0"/></svg> },
+    { id: 'library', label: 'Pantry', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg> },
+    { id: 'settings', label: 'Settings', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.5 4.5l1.5 1.5M16 16l1.5 1.5M4.5 17.5L6 16M16 6l1.5-1.5"/></svg> },
+  ];
+  return (
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingBottom: 30, background: 'rgba(251,246,234,.92)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 20 }}>
+      <style>{`@keyframes dotPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.5} }`}</style>
+      {tabs.map(t => (
+        <div key={t.id} onClick={() => onTab(t.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', color: active === t.id ? CARE_COLORS.sageDeep : CARE_COLORS.muted, fontFamily: careFont, fontSize: 11, fontWeight: 600, letterSpacing: .3, textTransform: 'uppercase', position: 'relative' }}>
+          {t.id === 'notification' && active !== 'notification' && hasActivity && (
+            <div style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.18 25)', animation: 'dotPulse 1.8s ease-in-out infinite' }} />
+          )}
+          {t.icon}
+          <span>{t.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FoodChip({ id, onRemove, compact }) {
+  const f = FOOD_CATALOG[id];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: compact ? '6px 10px 6px 6px' : '8px 12px 8px 8px', background: '#fff', borderRadius: 899, border: `1px solid ${CARE_COLORS.lineSoft}`, fontFamily: careFont, fontSize: 14, fontWeight: 500, color: CARE_COLORS.ink }}>
+      <FoodImage id={id} size={compact ? 28 : 34} />
+      <span>{f.name}</span>
+      {onRemove && (
+        <button onClick={onRemove} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: CARE_COLORS.muted, width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+const KITCHEN = [
+  { label: 'favourites', ids: ['toast', 'pasta', 'banana', 'milk', 'strawberry', 'peas'] },
+  { label: 'Proteins',   ids: ['chicken', 'cheese', 'ham', 'egg', 'yogurt'] },
+  { label: 'Veg',        ids: ['carrot', 'cucumber', 'broccoli', 'corn', 'peas'] },
+  { label: 'Fruit',      ids: ['apple', 'grapes', 'orange', 'banana', 'strawberry'] },
+  { label: 'Grains',     ids: ['crackers', 'rice', 'pasta', 'toast', 'potato'] },
+];
+
+function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFilter, typeFilter, setTypeFilter }) {
+  const hasAny = textureFilter || tempFilter || typeFilter;
+  const pill = (active) => ({
+    flexShrink: 0, border: active ? `1.5px solid ${CARE_COLORS.sageDeep}` : `1px solid ${CARE_COLORS.line}`,
+    background: active ? CARE_COLORS.sageSoft : '#fff', borderRadius: 999,
+    padding: '5px 13px', fontFamily: careFont, fontSize: 12, fontWeight: 600,
+    color: active ? CARE_COLORS.sageDeep : CARE_COLORS.muted, cursor: 'pointer',
+    transition: 'all .15s', whiteSpace: 'nowrap', outline: 'none',
+  });
+  const Row = ({ options, active, onSelect }) => (
+    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none', msOverflowStyle: 'none',
+      WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)',
+      maskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)',
+    }}>
+      {options.map(opt => (
+        <button key={opt.value} onClick={() => onSelect(active === opt.value ? null : opt.value)} style={pill(active === opt.value)}>
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+  return (
+    <div style={{ paddingTop: 2 }}>
+      <Row active={textureFilter} onSelect={setTextureFilter} options={[
+        { value: 'crunchy', label: 'Crunchy' }, { value: 'crispy', label: 'Crispy' },
+        { value: 'soft',    label: 'Soft'    }, { value: 'creamy', label: 'Creamy' },
+        { value: 'chewy',   label: 'Chewy'   }, { value: 'smooth', label: 'Smooth' },
+        { value: 'fluffy',  label: 'Fluffy'  }, { value: 'juicy',  label: 'Juicy'  },
+        { value: 'firm',    label: 'Firm'    }, { value: 'sticky', label: 'Sticky' },
+      ]} />
+      <Row active={tempFilter} onSelect={setTempFilter} options={[
+        { value: 'hot',   label: 'Hot'      }, { value: 'cold', label: 'Cold' },
+        { value: 'room',  label: 'Room Temp' }, { value: 'frozen', label: 'Frozen' },
+      ]} />
+      <Row active={typeFilter} onSelect={setTypeFilter} options={[
+        { value: 'fruit',   label: 'Fruit'   }, { value: 'veggies', label: 'Veggies' },
+        { value: 'protein', label: 'Protein' }, { value: 'dairy',   label: 'Dairy'   },
+        { value: 'grains',  label: 'Grains'  },
+      ]} />
+      {hasAny && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -2, paddingBottom: 6 }}>
+          <button onClick={() => { setTextureFilter(null); setTempFilter(null); setTypeFilter(null); }}
+            style={{ border: 'none', background: 'transparent', fontFamily: careFont, fontSize: 11, fontWeight: 600, color: CARE_COLORS.muted, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+            Clear filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu = [], onSetMenu, onSaved, onSendMenu, onOpenPantry, pickedPlate, onViewActivity }) {
+  const [meal, setMeal] = React.useState('lunch');
+  const [kitchenOpen, setKitchenOpen] = React.useState(false);
+  const [saved, setSaved] = React.useState(false);
+  const [plateType, setPlateType] = React.useState('basic');
+  const [pickingPlate, setPickingPlate] = React.useState(false);
+  const [pendingMeal, setPendingMeal] = React.useState(null);
+  const [kitchenQuery, setKitchenQuery] = React.useState('');
+  const [textureFilter, setTextureFilter] = React.useState(null);
+  const [tempFilter, setTempFilter] = React.useState(null);
+  const [typeFilter, setTypeFilter] = React.useState(null);
+  const meals = [
+    { id: 'breakfast', label: 'Breakfast' }, { id: 'lunch', label: 'Lunch' },
+    { id: 'dinner', label: 'Dinner' },       { id: 'snack', label: 'Snack' },
+  ];
+  const [plateStatusFaded, setPlateStatusFaded] = React.useState(false);
+  React.useEffect(() => {
+    if (!pickedPlate) { setPlateStatusFaded(false); return; }
+    setPlateStatusFaded(false);
+    const t = setTimeout(() => setPlateStatusFaded(true), 30000);
+    return () => clearTimeout(t);
+  }, [pickedPlate]);
+  const toggleFood = (id) => onSetMenu(xs => xs.includes(id) ? xs.filter(x => x !== id) : [...xs, id]);
+  const mealLabel = meals.find(m => m.id === meal)?.label || 'Lunch';
+  const handleSave = () => { setSaved(true); onSendMenu && onSendMenu({ items: menu, plateType }); };
+  const switchMeal = (m) => {
+    if (m.id === meal) return;
+    if (menu.length > 0) { setPendingMeal(m); return; }
+    setMeal(m.id); onSetMenu([]); setSaved(false);
+    if (m.id === 'snack') setPlateType('snack');
+  };
+  const confirmSwitch = () => {
+    setMeal(pendingMeal.id); onSetMenu([]); setSaved(false);
+    if (pendingMeal.id === 'snack') setPlateType('snack');
+    setPendingMeal(null);
+  };
+
+  // Build kitchen categories from live kitchenIds prop
+  const knownIds = new Set(KITCHEN.flatMap(c => c.ids));
+  const extraIds = kitchenIds.filter(id => !knownIds.has(id));
+  const kitchenCats = [
+    ...(extraIds.length > 0 ? [{ label: 'Recently Added', ids: extraIds }] : []),
+    ...KITCHEN.slice(1).map(cat => ({ label: cat.label, ids: cat.ids.filter(id => kitchenIds.includes(id)) })),
+  ].filter(cat => cat.ids.length > 0);
+
+  const _now = new Date();
+  const _days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const _months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateLabel = `${_days[_now.getDay()]} · ${_now.getDate()} ${_months[_now.getMonth()]}`;
+
+  return (
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <style>{`@keyframes sheetUp { from { transform: translateY(100%) } to { transform: translateY(0) } } @keyframes ppFadeSlideUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } } @keyframes ppButtonBounce { 0%{transform:scale(1)} 30%{transform:scale(1.05)} 55%{transform:scale(.97)} 75%{transform:scale(1.02)} 100%{transform:scale(1)} } @keyframes ppPulse { 0%,100%{opacity:.5;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }`}</style>
+      <CareStatusBar />
+      <div style={{ flex: 1, overflow: 'auto', padding: '8px 20px 120px', fontFamily: careFont }}>
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase' }}>{dateLabel}</div>
+          <div style={{ fontFamily: serifFont, fontSize: 32, fontWeight: 500, letterSpacing: -.5, marginTop: 4, color: CARE_COLORS.ink, lineHeight: 1.1 }}>{childName}'s Menu</div>
+        </div>
+        {/* Loop status strip: Sent → Waiting → Received */}
+        {(saved || pickedPlate) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, padding: '9px 12px', background: pickedPlate ? '#EEF7E4' : CARE_COLORS.sageSoft, borderRadius: 10, border: `1px solid ${pickedPlate ? '#C3E09A' : CARE_COLORS.sage}`, opacity: pickedPlate && plateStatusFaded ? 0 : 1, maxHeight: pickedPlate && plateStatusFaded ? 0 : 60, marginBottom: pickedPlate && plateStatusFaded ? -14 : 0, overflow: 'hidden', transition: pickedPlate ? 'opacity 0.8s ease, max-height 0.8s ease, margin-bottom 0.8s ease' : 'none', pointerEvents: pickedPlate && plateStatusFaded ? 'none' : 'auto' }}>
+            {pickedPlate ? (
+              <>
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0 }}>
+                  <circle cx="7.5" cy="7.5" r="7.5" fill="#6AAF3D" opacity=".2" />
+                  <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="#3A7D0E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span style={{ flex: 1, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>{childName} picked her plate</span>
+                <button onClick={onViewActivity} style={{ border: 'none', background: 'none', fontFamily: careFont, fontSize: 13, fontWeight: 700, color: CARE_COLORS.sageDeep, cursor: 'pointer', padding: 0 }}>View →</button>
+              </>
+            ) : (
+              <>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: CARE_COLORS.sageDeep, flexShrink: 0, animation: 'ppPulse 1.6s ease-in-out infinite' }} />
+                <span style={{ fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>Sent · Waiting for {childName} to pick</span>
+              </>
+            )}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 6, marginTop: 14, background: '#fff', borderRadius: 12, padding: 4, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+          {meals.map(m => (
+            <button key={m.id} onClick={() => switchMeal(m)} style={{ flex: 1, border: 'none', padding: '10px 4px', borderRadius: 8, fontFamily: careFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: meal === m.id ? CARE_COLORS.sageSoft : 'transparent', color: meal === m.id ? CARE_COLORS.sageDeep : CARE_COLORS.muted, transition: 'all .15s' }}>{m.label}</button>
+          ))}
+        </div>
+        {/* Today's Menu */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 28, marginBottom: 12 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: CARE_COLORS.ink, letterSpacing: -.2 }}>Today's Menu</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            {menu.length > 0 && <div onClick={() => onSetMenu([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>Clear all</div>}
+            <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontWeight: 500 }}>{menu.length} {menu.length === 1 ? 'item' : 'items'}</div>
+          </div>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 56 }}>
+          {menu.length === 0 && (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0 4px', gap: 4 }}>
+              <PlateHero size={72} />
+              <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont, fontWeight: 500 }}>Tap to build today's menu.</div>
+            </div>
+          )}
+          {menu.map(id => <FoodChip key={id} id={id} onRemove={() => toggleFood(id)} />)}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 4 : 0 }}>
+            <button onClick={() => setKitchenOpen(true)} style={{ padding: '8px 20px', background: CARE_COLORS.sageDeep, border: 'none', borderRadius: 899, cursor: 'pointer', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: '#fbf6ea', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+              Kitchen
+            </button>
+          </div>
+        </div>
+
+        {/* Plate picker row */}
+        <div onClick={() => setPickingPlate(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, padding: '12px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer' }}>
+          <PlateChip type={plateType} size={28} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontWeight: 500 }}>Plate</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink, marginTop: 1 }}>{PLATE_TYPES.find(p => p.id === plateType)?.label}</div>
+          </div>
+          <span style={{ fontSize: 13, color: CARE_COLORS.sageDeep, fontWeight: 600 }}>Change</span>
+        </div>
+
+        {menu.length > 0 && (
+          <div style={{ marginTop: 12, position: 'relative' }}>
+            {!saved && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: CARE_COLORS.sageDeep, animation: 'ppSpin 1.8s ease-in-out infinite', boxShadow: `0 0 0 2px ${CARE_COLORS.sageSoft}` }} />
+                <span style={{ fontFamily: careFont, fontSize: 12, fontWeight: 600, color: CARE_COLORS.sageDeep }}>Ready to send — {childName} is waiting</span>
+              </div>
+            )}
+            <button onClick={handleSave} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', transition: 'background .2s', animation: saved ? 'ppButtonBounce .5s cubic-bezier(.2,.8,.3,1.2)' : 'none' }}>
+              {saved ? `✓ ${mealLabel} menu sent` : `Send ${childName}'s ${mealLabel} Menu`}
+            </button>
+          </div>
+        )}
+        <div style={{ marginTop: 20 }}>
+          <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 8 }}>Saved Menus</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {savedMenus.map(m => (
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink }}>{m.name}</div>
+                  <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginTop: 2 }}>{m.meal} · {m.ids.length} items</div>
+                </div>
+                <button onClick={() => onSetMenu(m.ids)} style={{ border: `1.5px solid ${CARE_COLORS.sage}`, background: 'transparent', color: CARE_COLORS.sageDeep, padding: '7px 14px', borderRadius: 899, fontFamily: careFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Use</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Plate picker sheet */}
+      {pickingPlate && (
+        <div onClick={() => setPickingPlate(false)} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', padding: '14px 20px 40px', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 16px' }} />
+            <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, color: CARE_COLORS.ink, marginBottom: 20 }}>Choose a plate</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+              {PLATE_TYPES.map(pt => {
+                const selected = pt.id === plateType;
+                return (
+                  <div key={pt.id} onClick={() => { setPlateType(pt.id); setPickingPlate(false); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 4px 10px', borderRadius: 12, border: selected ? `1.5px solid ${CARE_COLORS.sageDeep}` : '1.5px solid transparent', background: selected ? '#fff' : 'transparent', cursor: 'pointer' }}>
+                    <PlateChip type={pt.id} size={52} />
+                    <div style={{ fontFamily: serifFont, fontSize: 13, fontWeight: 500, color: CARE_COLORS.ink, textAlign: 'center' }}>{pt.label}</div>
+                    <div style={{ fontFamily: careFont, fontSize: 10, color: CARE_COLORS.muted, textAlign: 'center', lineHeight: 1.3 }}>{pt.caption}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation — shown when switching meal tabs would wipe a non-empty menu */}
+      {pendingMeal && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 55, background: 'rgba(40,30,20,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', animation: 'ppFadeIn .15s ease' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '22px 20px 18px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,.18)' }}>
+            <div style={{ fontFamily: serifFont, fontSize: 17, fontWeight: 600, color: CARE_COLORS.ink, marginBottom: 6 }}>Switch to {pendingMeal.label}?</div>
+            <div style={{ fontFamily: careFont, fontSize: 13, color: CARE_COLORS.muted, marginBottom: 18, lineHeight: 1.4 }}>Your {mealLabel} menu ({menu.length} {menu.length === 1 ? 'item' : 'items'}) will be cleared.</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingMeal(null)} style={{ flex: 1, border: `1.5px solid ${CARE_COLORS.line}`, background: 'transparent', borderRadius: 10, padding: '11px 0', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: CARE_COLORS.mutedStrong, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={confirmSwitch} style={{ flex: 1, border: 'none', background: CARE_COLORS.sageDeep, borderRadius: 10, padding: '11px 0', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Switch</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kitchen sheet */}
+      {kitchenOpen && (
+        <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '82%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)' }}>
+            <div style={{ padding: '14px 20px 0', flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 16px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, color: CARE_COLORS.ink }}>Kitchen</div>
+                <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); onOpenPantry && onOpenPantry(); }} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep, cursor: 'pointer', fontFamily: careFont }}>Add to Kitchen</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: `1px solid ${CARE_COLORS.line}`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><circle cx="6" cy="6" r="4.5" stroke={CARE_COLORS.muted} strokeWidth="1.5"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke={CARE_COLORS.muted} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <input value={kitchenQuery} onChange={e => setKitchenQuery(e.target.value)} placeholder="Search kitchen…" style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink }} />
+                {kitchenQuery && <div onClick={() => setKitchenQuery('')} style={{ color: CARE_COLORS.muted, cursor: 'pointer', fontSize: 16, lineHeight: 1, marginTop: -1 }}>×</div>}
+              </div>
+              <PillFilterRows textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 32px' }}>
+              {(() => {
+                const q = kitchenQuery.trim().toLowerCase();
+                const hasFilter = q || textureFilter || tempFilter || typeFilter;
+                const filterIds = (ids) => ids.filter(id => {
+                  if (q && !FOOD_CATALOG[id]?.name.toLowerCase().includes(q)) return false;
+                  const meta = FOOD_META[id];
+                  if (meta) {
+                    if (textureFilter && !meta.textures.includes(textureFilter)) return false;
+                    if (tempFilter && !meta.temps.includes(tempFilter)) return false;
+                    if (typeFilter && meta.type !== typeFilter) return false;
+                  }
+                  return true;
+                });
+                const cats = kitchenCats.map(cat => ({ ...cat, ids: filterIds(cat.ids) })).filter(cat => cat.ids.length > 0);
+                if (hasFilter && cats.length === 0) return <div style={{ fontFamily: careFont, fontSize: 14, color: CARE_COLORS.muted, textAlign: 'center', marginTop: 32 }}>No results found</div>;
+                return cats.map(cat => (
+                <div key={cat.label} style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 10, fontFamily: careFont }}>{cat.label}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    {cat.ids.map(id => {
+                      const onMenu = menu.includes(id);
+                      return (
+                        <div key={id} onClick={() => toggleFood(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: onMenu ? '#E4F3DC' : '#fff', border: onMenu ? `1.5px solid #A9D18E` : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
+                          <FoodImage id={id} size={52} />
+                          <div style={{ fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
+                          {onMenu && (
+                            <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#6B9E52', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4l1.8 1.8L6.5 2"/></svg>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ));
+              })()}
+            </div>
+            <div style={{ padding: '12px 20px 24px', flexShrink: 0 }}>
+              <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ width: '100%', padding: '13px 0', borderRadius: 12, background: CARE_COLORS.sageDeep, border: 'none', color: '#fbf6ea', fontSize: 15, fontWeight: 600, fontFamily: careFont, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+                {menu.length > 0 ? `Back to menu · ${menu.length} ${menu.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
+  const [saved, setSaved] = React.useState(false);
+  const [dismissed, setDismissed] = React.useState(false);
+  const [swipeX, setSwipeX] = React.useState(0);
+  const [dismissing, setDismissing] = React.useState(false);
+  const handleSwipe = (e) => {
+    const startX = e.clientX;
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
+    let dx = 0;
+    const move = (ev) => { dx = ev.clientX - startX; setSwipeX(dx); };
+    const up = () => {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      if (Math.abs(dx) > 80) { setDismissing(true); setTimeout(() => setDismissed(true), 300); }
+      else setSwipeX(0);
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+  };
+
+  if (!pickedPlate) {
+    return (
+      <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <CareStatusBar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '0 40px', textAlign: 'center' }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke={CARE_COLORS.line} strokeWidth="2" strokeLinecap="round"><circle cx="20" cy="20" r="15"/><path d="M20 13v7l4 4"/></svg>
+          <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, color: CARE_COLORS.muted, lineHeight: 1.3 }}>Waiting for {childName} to pick her plate.</div>
+          <div style={{ fontFamily: careFont, fontSize: 14, color: CARE_COLORS.muted, lineHeight: 1.5 }}>This is where you'll be able to track your child's choices.</div>
+        </div>
+      </div>
+    );
+  }
+
+  const items     = pickedPlate.items;
+  const plateType = pickedPlate.plateType || 'basic';
+  const foodIds   = [...new Set(items.map(it => it.id))];
+  const plateLabel = { basic: 'Basic round plate', divided: 'Divided plate', rainbow: 'Rainbow plate', 'one-new-thing': 'One new thing', snack: 'Snack plate' }[plateType] || 'Round plate';
+  const timeLabel = pickedPlate.submittedAt
+    ? new Date(pickedPlate.submittedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : null;
+
+  const historicalFoods = new Set(SAVED_MENUS_DATA.flatMap(m => m.ids));
+  const familiarFoods = foodIds.filter(id => historicalFoods.has(id));
+  const newFoods = foodIds.filter(id => !historicalFoods.has(id));
+  const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
+
+  let headline, subline, insightTag;
+  if (SAVED_MENUS_DATA.length === 0) {
+    headline = `${childName} built her first plate.`;
+    subline = `${foodIds.length} ${foodIds.length === 1 ? 'food' : 'foods'} chosen.`;
+    insightTag = 'First plate';
+  } else if (newFoods.length > 0 && familiarFoods.length > 0) {
+    headline = `${familiarFoods.length} familiar, ${newFoods.length} new.`;
+    subline = `First time with ${nameList(newFoods)}.`;
+    insightTag = newFoods.length === 1 ? '1 new food' : `${newFoods.length} new foods`;
+  } else if (newFoods.length > 0) {
+    headline = `${newFoods.length === 1 ? 'One new food' : `${newFoods.length} new foods`} today.`;
+    subline = `First time with ${nameList(newFoods)}.`;
+    insightTag = newFoods.length === 1 ? '1 new food' : `${newFoods.length} new foods`;
+  } else {
+    headline = `${childName} chose familiar foods today.`;
+    subline = `${familiarFoods.length} ${familiarFoods.length === 1 ? 'food' : 'foods'} from her usual picks.`;
+    insightTag = null;
+  }
+
+  return (
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <CareStatusBar />
+      <div style={{ flex: 1, overflow: 'auto', padding: '6px 20px 120px', fontFamily: careFont }}>
+        <style>{`@keyframes notifSlide { from { transform: translateY(-20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`}</style>
+        {!dismissed && <div onPointerDown={handleSwipe} style={{ marginTop: 4, padding: '12px 14px', background: '#fff', borderRadius: 16, border: `1px solid ${CARE_COLORS.lineSoft}`, boxShadow: '0 4px 16px rgba(40,30,20,.06)', animation: 'notifSlide .45s cubic-bezier(.2,.9,.3,1)', cursor: 'grab', transform: dismissing ? `translateX(${swipeX >= 0 ? '120%' : '-120%'})` : `translateX(${swipeX}px)`, transition: (dismissing || swipeX === 0) ? 'transform .3s ease, opacity .3s' : 'none', opacity: dismissing ? 0 : 1 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 7, background: `radial-gradient(circle at 30% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink }}>Pick Your Plate</span>
+                <span style={{ fontSize: 11, color: CARE_COLORS.muted }}>{timeLabel || 'now'}</span>
+              </div>
+              <div style={{ fontSize: 14, color: CARE_COLORS.ink, fontWeight: 600 }}>{childName} built her plate.</div>
+              <div style={{ fontSize: 13, color: CARE_COLORS.mutedStrong, marginTop: 1, lineHeight: 1.35 }}>{foodIds.length} {foodIds.length === 1 ? 'food' : 'foods'} chosen.</div>
+            </div>
+          </div>
+        </div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 24 }}>
+          <PlateHero size={80} />
+          <div>
+            <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, lineHeight: 1.15 }}>{headline}</div>
+            <div style={{ fontSize: 14, color: CARE_COLORS.muted, marginTop: 4 }}>{subline}</div>
+            {timeLabel && <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginTop: 5, fontFamily: careFont }}>Submitted at {timeLabel}</div>}
+            {insightTag && <div style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700, letterSpacing: .4, textTransform: 'uppercase', color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, padding: '3px 10px', borderRadius: 899 }}>{insightTag}</div>}
+          </div>
+        </div>
+        <div style={{ marginTop: 22, padding: 24, background: '#fff', borderRadius: 20, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ position: 'relative', width: 220, height: 220 }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, #fff, #ffffff 55%, #e4e4e4 100%)`, boxShadow: '0 6px 22px rgba(60,40,20,.1), inset 0 2px 0 rgba(255,255,255,.6)' }} />
+            <PlateShape type={plateType} plateColor="#ffffff" rimColor="#e4e4e4" />
+            {items.map(it => (
+              <div key={it.uid} style={{ position: 'absolute', left: `${it.x}%`, top: `${it.y}%`, transform: 'translate(-50%, -50%)' }}>
+                <FoodImage id={it.id} size={72} />
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase', marginTop: 18 }}>{plateLabel}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 10 }}>
+            {foodIds.map(id => <span key={id} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink, padding: '4px 10px', borderRadius: 899, background: CARE_COLORS.surface }}>{FOOD_CATALOG[id].name}</span>)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: CARE_COLORS.sageSoft, borderRadius: 12, marginTop: 4 }}>
+          <img src="./platey_home_transparent.png" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: 13, color: CARE_COLORS.sageDeep, lineHeight: 1.5, fontFamily: careFont, fontWeight: 500 }}>
+            {newFoods.length > 0 && familiarFoods.length > 0
+              ? "You've been offering a nice mix of familiar and new — that's exactly how comfort with food grows."
+              : newFoods.length > 0
+              ? "All new foods today — consider pairing with something familiar next time to keep it low-stress."
+              : "Staying with familiar foods is totally valid. Consistency builds trust over time."}
+          </p>
+        </div>
+        <button onClick={() => { if (!saved) { setSaved(true); onSaveMenu && onSaveMenu({ name: `${childName}'s plate`, meal: plateLabel, ids: foodIds }); } }} style={{ width: '100%', marginTop: 8, border: 'none', padding: '13px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 14, fontWeight: 600, cursor: saved ? 'default' : 'pointer', transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+          {saved
+            ? <><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 3"/></svg>Saved</>
+            : 'Save menu for future'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const SAVED_MENUS_DATA = [];
+
+const CATALOG_CATS = [
+  { label: 'Proteins',        ids: ['chicken', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'scrambledegg', 'butterchicken', 'dal'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'corn', 'peas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado'] },
+  { label: 'Fruit',           ids: ['apple', 'grapes', 'orange', 'banana', 'strawberry', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'raspberries'] },
+  { label: 'Grains & Starch', ids: ['pasta', 'rice', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'mashedpotato', 'frenchtoast', 'tatertots', 'lasagna', 'garlicbread', 'ramen', 'eggroll', 'tacos', 'burrito', 'naan', 'samosa'] },
+  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'applesauce', 'popcorn', 'pretzel', 'granola', 'chocolatemilk'] },
+];
+
+function CareLibrary({ childName = 'Mira', savedMenus = [], kitchenIds = [], onAddToKitchen, onAddToMenu, onDone }) {
+  const [kitchenFoods, setKitchenFoods] = React.useState(() => [...kitchenIds]);
+  const [query, setQuery] = React.useState('');
+  const [textureFilter, setTextureFilter] = React.useState(null);
+  const [tempFilter, setTempFilter] = React.useState(null);
+  const [typeFilter, setTypeFilter] = React.useState(null);
+  const toggle = (id) => setKitchenFoods(xs => xs.includes(id) ? xs.filter(x => x !== id) : [...xs, id]);
+  const newlyAdded = kitchenFoods.filter(id => !kitchenIds.includes(id));
+
+  const q = query.trim().toLowerCase();
+  const hasMetaFilter = textureFilter || tempFilter || typeFilter;
+  const filterByMeta = (ids) => ids.filter(id => {
+    const meta = FOOD_META[id];
+    if (!meta) return !textureFilter && !tempFilter && !typeFilter;
+    if (textureFilter && !meta.textures.includes(textureFilter)) return false;
+    if (tempFilter && !meta.temps.includes(tempFilter)) return false;
+    if (typeFilter && meta.type !== typeFilter) return false;
+    return true;
+  });
+
+  const allFoodIds = [...new Set([...KITCHEN[0].ids, ...CATALOG_CATS.flatMap(c => c.ids)])];
+  const matchedFoods = filterByMeta(q ? allFoodIds.filter(id => FOOD_CATALOG[id]?.name.toLowerCase().includes(q)) : allFoodIds);
+  const matchedMenus = q ? savedMenus.filter(m => m.name.toLowerCase().includes(q)) : savedMenus;
+
+  const FoodTile = ({ id }) => {
+    const on = kitchenFoods.includes(id);
+    return (
+      <div onClick={() => toggle(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 4px 8px', borderRadius: 12, background: on ? '#E4F3DC' : '#fff', border: on ? '1.5px solid #A9D18E' : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
+        <FoodImage id={id} size={44} />
+        <div style={{ fontSize: 11, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
+        {on && <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#6B9E52', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4l1.8 1.8L6.5 2"/></svg></div>}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <CareStatusBar />
+      <div style={{ flex: 1, overflow: 'auto', padding: '12px 20px 24px', fontFamily: careFont }}>
+        <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Pantry</div>
+
+        {/* Search bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.line}`, marginBottom: 12 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={CARE_COLORS.muted} strokeWidth="1.8" strokeLinecap="round"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search foods…"
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: careFont, fontSize: 15, color: CARE_COLORS.ink }}
+          />
+          {q && (
+            <div onClick={() => setQuery('')} style={{ cursor: 'pointer', color: CARE_COLORS.muted, lineHeight: 1 }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg>
+            </div>
+          )}
+        </div>
+        <PillFilterRows textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />
+
+        {/* Search results */}
+        {(q || hasMetaFilter) ? (
+          <>
+            {matchedFoods.length === 0 && (
+              <div style={{ textAlign: 'center', color: CARE_COLORS.muted, fontSize: 14, marginTop: 40 }}>{q ? `No results for "${query}"` : 'No results found'}</div>
+            )}
+            {(() => {
+              const inKitchen = matchedFoods.filter(id => kitchenFoods.includes(id));
+              const notInKitchen = matchedFoods.filter(id => !kitchenFoods.includes(id));
+              return (
+                <>
+                  {inKitchen.length > 0 && (
+                    <div style={{ marginBottom: 24 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 10, fontFamily: careFont }}>In your kitchen</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                        {inKitchen.map(id => <FoodTile key={id} id={id} />)}
+                      </div>
+                    </div>
+                  )}
+                  {notInKitchen.length > 0 && (
+                    <div style={{ marginBottom: 24 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 6, fontFamily: careFont }}>Not in your kitchen yet</div>
+                      <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont, lineHeight: 1.4 }}>Tap to add to your kitchen — then open the Kitchen sheet to put it on today's menu.</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                        {notInKitchen.map(id => <FoodTile key={id} id={id} />)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 13, color: CARE_COLORS.muted, marginBottom: 18 }}>Tap to add or remove items from your kitchen</div>
+
+            {CATALOG_CATS.map((cat, i) => (
+              <div key={cat.label} style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase' }}>{cat.label}</div>
+                  {i === 0 && <div onClick={() => setKitchenFoods([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont }}>Clear all</div>}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  {filterByMeta(cat.ids).map(id => <FoodTile key={id} id={id} />)}
+                </div>
+              </div>
+            ))}
+
+          </>
+        )}
+      </div>
+      <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.bg }}>
+        <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+          {newlyAdded.length > 0 ? `Save · ${newlyAdded.length} new ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CareWelcome({ onStart }) {
+  const BG = '#EDEADF';
+  const NAVY = '#19324A';
+  const TEAL = '#38B9C7';
+  const CORAL = '#F5654D';
+  const GREEN = '#77BE55';
+
+  const steps = [
+    { n: 1, color: '#19324A',  text: "Setup your kitchen to match what's at home.",              scene: './step1_scene.png', right: <img src="./phone_menu.png"         style={{ height: 88, display: 'block' }} /> },
+    { n: 2, color: TEAL,  text: 'Create a menu to share with your child.',                    scene: './step2_scene.png', right: <img src="./phone_send_menu.png"    style={{ height: 88, display: 'block' }} /> },
+    { n: 3, color: GREEN, text: 'Your child selects from the menu and sends it back to you.', scene: './step3_scene.png', right: <img src="./phone_child_select.png" style={{ height: 88, display: 'block' }} /> },
+    { n: 4, color: CORAL, text: 'No fuss, no muss, time to eat!',                             scene: './step4_scene.png', right: <img src="./meal_plate.png"         style={{ height: 72, display: 'block' }} /> },
+  ];
+
+  return (
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: BG }}>
+      <CareStatusBar />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 120px' }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginTop: 0, marginBottom: -18 }}>
+          <img src="./pyp_logo.png" style={{ width: 170, display: 'inline-block' }} />
+        </div>
+
+        {/* Intro text */}
+        <div style={{ textAlign: 'center', marginTop: 6, marginBottom: 14, padding: '0 8px' }}>
+          <p style={{ margin: 0, fontSize: 14, color: NAVY, lineHeight: 1.65, fontFamily: careFont }}>
+            Pick Your Plate reduces mealtime anxiety for children who struggle with food. With PYP, your child makes real choices that result in real meals.
+          </p>
+        </div>
+
+        {/* HOW PYP WORKS */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+          <svg width="26" height="11" viewBox="0 0 26 11" fill="none"><path d="M1 5.5h18M15 1.5l4 4-4 4" stroke={CORAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ fontSize: 11, fontWeight: 800, color: NAVY, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'Nunito, system-ui' }}>How PYP Works</span>
+          <svg width="26" height="11" viewBox="0 0 26 11" fill="none"><path d="M25 5.5H7M11 1.5L7 5.5l4 4" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+
+        {/* Step cards */}
+        {steps.map(s => (
+          <div key={s.n} style={{ background: '#fff', borderRadius: 16, marginBottom: 9, display: 'flex', alignItems: 'center', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,.06)', minHeight: 96 }}>
+            {/* Left: scene image in light-blue circle bg */}
+            <div style={{ width: 96, minHeight: 96, background: '#E0F3F8', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <img src={s.scene} style={{ width: 84, display: 'block' }} />
+              <div style={{ position: 'absolute', top: 7, right: 7, width: 22, height: 22, borderRadius: '50%', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 12, fontFamily: 'Nunito, system-ui', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}>{s.n}</div>
+            </div>
+            {/* Text */}
+            <div style={{ flex: 1, padding: '10px 10px', fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, fontFamily: 'Nunito, system-ui' }}>{s.text}</div>
+            {/* Right: phone / meal image */}
+            <div style={{ flexShrink: 0, marginRight: 10, display: 'flex', alignItems: 'center' }}>{s.right}</div>
+          </div>
+        ))}
+
+        {/* Tagline */}
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <svg width="20" height="18" viewBox="0 0 20 18" fill={TEAL}><path d="M10 17S1 11 1 5A4.5 4.5 0 0 1 10 2.5 4.5 4.5 0 0 1 19 5C19 11 10 17 10 17z"/></svg>
+          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#4A6080', fontWeight: 600, lineHeight: 1.65, fontFamily: careFont }}>More choice. Less stress. Better meals. Together.</p>
+        </div>
+      </div>
+
+      {/* Sticky CTA */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px 18px 40px', background: `linear-gradient(transparent, ${BG} 36%)` }}>
+        <button onClick={onStart} style={{ width: '100%', border: 'none', padding: '17px 0', borderRadius: 899, background: `linear-gradient(135deg, ${TEAL}, #2CA8B8)`, color: '#fff', fontSize: 18, fontWeight: 800, fontFamily: 'Nunito, system-ui', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 6px 22px rgba(56,185,199,.4)', letterSpacing: .3 }}>
+          Let's Get Started <span style={{ fontSize: 20, fontWeight: 300 }}>›</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap }) {
+  const [swipeX, setSwipeX] = React.useState(0);
+  const [dismissing, setDismissing] = React.useState(false);
+
+  const items = pickedPlate?.items || [];
+  const foodIds = [...new Set(items.map(it => it.id))];
+  const historicalFoods = new Set(SAVED_MENUS_DATA.flatMap(m => m.ids));
+  const newFoods = foodIds.filter(id => !historicalFoods.has(id));
+  const familiarFoods = foodIds.filter(id => historicalFoods.has(id));
+  const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
+
+  let headline, subline;
+  if (newFoods.length > 0 && familiarFoods.length > 0) {
+    headline = `${familiarFoods.length} familiar, ${newFoods.length} new.`;
+    subline = `First time with ${nameList(newFoods)}.`;
+  } else if (newFoods.length > 0) {
+    headline = `${newFoods.length === 1 ? 'One new food' : `${newFoods.length} new foods`} today.`;
+    subline = `First time with ${nameList(newFoods)}.`;
+  } else {
+    headline = `${childName} built her plate.`;
+    subline = `${foodIds.length} ${foodIds.length === 1 ? 'food' : 'foods'} chosen.`;
+  }
+
+  const dismiss = () => { setDismissing(true); setTimeout(onDismiss, 320); };
+
+  const handleSwipe = (e) => {
+    const startX = e.clientX;
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
+    let dx = 0;
+    const move = (ev) => { dx = ev.clientX - startX; setSwipeX(dx); };
+    const up = () => {
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      if (Math.abs(dx) > 60) dismiss();
+      else if (Math.abs(dx) < 5) { dismiss(); onTap && onTap(); }
+      else setSwipeX(0);
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+  };
+
+  return (
+    <div style={{ position: 'absolute', top: 54, left: 12, right: 12, zIndex: 45, pointerEvents: 'auto' }}>
+      <style>{`@keyframes notifSlideDown { from { transform: translateY(-72px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`}</style>
+      <div onPointerDown={handleSwipe} style={{ padding: '12px 14px', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(20px)', borderRadius: 16, boxShadow: '0 8px 28px rgba(40,30,20,.16)', animation: 'notifSlideDown .38s cubic-bezier(.2,.9,.3,1)', cursor: 'grab', transform: dismissing ? 'translateY(-80px)' : `translateX(${swipeX}px)`, transition: (dismissing || swipeX === 0) ? 'transform .32s ease, opacity .32s' : 'none', opacity: dismissing ? 0 : 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 7, background: `radial-gradient(circle at 30% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="./pyp_logo.png" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont }}>Pick Your Plate</span>
+              <span style={{ fontSize: 12, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontWeight: 600, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); dismiss(); onTap && onTap(); }}>View →</span>
+            </div>
+            <div style={{ fontSize: 14, color: CARE_COLORS.ink, fontWeight: 600, fontFamily: careFont }}>{headline}</div>
+            <div style={{ fontSize: 13, color: CARE_COLORS.mutedStrong, marginTop: 1, lineHeight: 1.35, fontFamily: careFont }}>{subline}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CaretakerApp({ childName = 'Mira', pickedPlate, onSendMenu }) {
+  const [screen, setScreen] = React.useState('welcome');
+  const [savedMenus, setSavedMenus] = React.useState([]);
+  const [lastSeenPlate, setLastSeenPlate] = React.useState(null);
+  const [kitchenIds, setKitchenIds] = React.useState(() => [...new Set(KITCHEN.flatMap(c => c.ids))]);
+  const [menu, setMenu] = React.useState([]);
+  const [showBanner, setShowBanner] = React.useState(false);
+  const prevPlateRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (pickedPlate && pickedPlate !== prevPlateRef.current) {
+      prevPlateRef.current = pickedPlate;
+      setShowBanner(true);
+      const t = setTimeout(() => setShowBanner(false), 15000);
+      return () => clearTimeout(t);
+    }
+  }, [pickedPlate]);
+
+  const addToKitchen = (ids) => setKitchenIds([...new Set(ids)]);
+  const addToMenu = (ids) => setMenu(xs => [...new Set([...xs, ...ids])]);
+  const hasUnseenActivity = pickedPlate !== null && pickedPlate !== lastSeenPlate;
+  const addSavedMenu = (entry) => setSavedMenus(xs => [...xs, { id: Date.now(), ...entry }]);
+  const goToActivity = () => { setLastSeenPlate(pickedPlate); setScreen('notification'); };
+  return (
+    <CareFrame>
+      {screen === 'welcome'      && <CareWelcome      onStart={() => setScreen('today')} />}
+      {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={onSendMenu} onOpenPantry={() => setScreen('library')} pickedPlate={pickedPlate} onViewActivity={goToActivity} />}
+      {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} />}
+      {screen === 'library'      && <CareLibrary      childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} onAddToKitchen={addToKitchen} onAddToMenu={addToMenu} onDone={() => setScreen('today')} />}
+      {screen === 'settings'     && (
+        <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <CareStatusBar />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '0 40px', textAlign: 'center' }}>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={CARE_COLORS.line} strokeWidth="1.8" strokeLinecap="round"><circle cx="18" cy="18" r="7"/><path d="M18 3v3M18 30v3M3 18h3M30 18h3M7.5 7.5l2 2M26.5 26.5l2 2M7.5 28.5l2-2M26.5 9.5l2-2"/></svg>
+            <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, color: CARE_COLORS.muted }}>Settings</div>
+            <div style={{ fontFamily: careFont, fontSize: 13, color: CARE_COLORS.muted, lineHeight: 1.5 }}>Coming soon.</div>
+          </div>
+        </div>
+      )}
+      {showBanner && screen !== 'notification' && <AppleNotifBanner childName={childName} pickedPlate={pickedPlate} onDismiss={() => setShowBanner(false)} onTap={() => { setShowBanner(false); setLastSeenPlate(pickedPlate); setScreen('notification'); }} />}
+      {screen !== 'welcome' && <CareTabBar active={screen} onTab={(tab) => { if (tab === 'notification') setLastSeenPlate(pickedPlate); setScreen(tab); }} hasActivity={hasUnseenActivity} />}
+    </CareFrame>
+  );
+}
+
+Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
+  </script>
+
+  <script type="text/babel">
+    function App() {
+      const [pickedPlate, setPickedPlate] = React.useState(() => {
+        try { return JSON.parse(localStorage.getItem('pyp_plate')); } catch { return null; }
+      });
+      const [sentMenu, setSentMenu] = React.useState(() => {
+        try { return JSON.parse(localStorage.getItem('pyp_menu')); } catch { return null; }
+      });
+      const handleSendMenu = (menu) => {
+        localStorage.setItem('pyp_menu', JSON.stringify(menu));
+        localStorage.removeItem('pyp_plate');
+        setSentMenu(menu);
+        setPickedPlate(null);
+      };
+      const handlePickedPlate = (plate) => {
+        localStorage.setItem('pyp_plate', JSON.stringify(plate));
+        setPickedPlate(plate);
+      };
+      return (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 60, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Caretaker · iPhone</div>
+            <CaretakerApp childName="Mira" pickedPlate={pickedPlate} onSendMenu={handleSendMenu} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Child · iPad</div>
+            <ChildApp childName="Mira" onSubmit={handlePickedPlate} sentMenu={sentMenu} />
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
