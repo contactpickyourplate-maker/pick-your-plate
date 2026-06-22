@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Is the requesting uid a confirmed member of this family?
+    function isMember(familyId) {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/families/$(familyId))
+          && request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+    }
+
+    // Family membership — only the Admin SDK (server) may write this collection.
+    // Clients can read their own family doc (needed to verify membership client-side if ever required),
+    // but cannot write at all — joining must go through /api/join-family.
+    match /families/{familyId} {
+      allow read:  if request.auth != null && request.auth.uid in resource.data.members;
+      allow write: if false;
+    }
+
+    // Session data — read/write/delete only for verified family members.
+    match /sessions/{familyId} {
+      allow read, write, delete: if isMember(familyId);
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

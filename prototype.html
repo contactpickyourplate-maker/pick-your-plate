@@ -3,7 +3,13 @@
 <head>
   <meta charset="utf-8">
   <title>Pick Your Plate — Prototype</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Pick Your Plate">
+  <link rel="apple-touch-icon" href="platey_celebration.png">
+  <meta name="theme-color" content="#f6efe2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,10 +17,37 @@
     html, body { margin: 0; padding: 0; background: #e0ddd4; font-family: Inter, system-ui, sans-serif; overscroll-behavior: none; }
     * { box-sizing: border-box; }
     #root { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px; }
+    @media (max-width: 900px) { #root { padding: 0; background: #f6efe2; } body { background: #f6efe2; } }
   </style>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyBFeuJYBb1GnkBUA76lEOWNClXj_fdjuoU",
+      authDomain: "pick-your-plate-ba3b7.firebaseapp.com",
+      projectId: "pick-your-plate-ba3b7",
+      storageBucket: "pick-your-plate-ba3b7.firebasestorage.app",
+      messagingSenderId: "270799277401",
+      appId: "1:270799277401:web:e98ef004d94902b5fcd048",
+    });
+    window.__db = firebase.firestore();
+    window.__auth = firebase.auth();
+    // Sign in anonymously — Firebase persists the uid across launches via IndexedDB
+    window.__authReady = new Promise(resolve => {
+      window.__auth.onAuthStateChanged(user => {
+        if (!user) { window.__auth.signInAnonymously().catch(() => {}); }
+        else { window.__uid = user.uid; resolve(user); }
+      });
+    });
+    async function __getToken() {
+      const user = await window.__authReady;
+      return user.getIdToken();
+    }
+  </script>
 </head>
 <body>
   <div id="root"></div>
@@ -28,7 +61,7 @@ const FOOD_CATALOG = {
   berries:    { name: 'Blueberries',   color: '#4a5496', accent: '#2c336b', shape: 'berries' },
   yogurt:     { name: 'Yoghurt',       color: '#f4efe4', accent: '#d8c8a4', shape: 'bowl' },
   cereal:     { name: 'Cereal',        color: '#e8b06a', accent: '#a46624', shape: 'loops' },
-  chicken:    { name: 'Chicken',       color: '#e6c28a', accent: '#a06c2a', shape: 'nugget' },
+  chicken:    { name: 'Chicken nuggets', color: '#e6c28a', accent: '#a06c2a', shape: 'nugget' },
   cheese:     { name: 'Cheese',        color: '#f8d76a', accent: '#c48a1c', shape: 'triangle' },
   beans:      { name: 'Beans',         color: '#a66a3a', accent: '#5c3418', shape: 'ovals' },
   ham:        { name: 'Ham',           color: '#e8a99a', accent: '#a85b4c', shape: 'folded' },
@@ -37,12 +70,14 @@ const FOOD_CATALOG = {
   carrot:     { name: 'Carrot',        color: '#e8904a', accent: '#9a4e18', shape: 'baton' },
   cucumber:   { name: 'Cucumber',      color: '#8ab572', accent: '#3a6a2c', shape: 'coin' },
   broccoli:   { name: 'Broccoli',      color: '#6d9a4c', accent: '#2e4e1a', shape: 'tree' },
-  corn:       { name: 'Sweetcorn',     color: '#f0cc4a', accent: '#a47818', shape: 'dots' },
+  spinach:    { name: 'Spinach',       color: '#4a8840', accent: '#1e5218', shape: 'leaf' },
+  lettuce:    { name: 'Lettuce',       color: '#7aba5a', accent: '#2e6018', shape: 'leaf' },
   peas:       { name: 'Peas',          color: '#a4c472', accent: '#4e7028', shape: 'triple' },
   tomato:     { name: 'Tomato',        color: '#d44a3a', accent: '#7a1e14', shape: 'round' },
   apple:      { name: 'Apple slice',   color: '#f4e8d0', accent: '#c66a4a', shape: 'wedge' },
   grapes:     { name: 'Grapes',        color: '#8a5aa8', accent: '#3c2052', shape: 'cluster' },
-  strawberry: { name: 'Strawberry',    color: '#dc4a5a', accent: '#7a1828', shape: 'heart' },
+  strawberry:   { name: 'Strawberry',    color: '#dc4a5a', accent: '#7a1828', shape: 'heart' },
+  raspberries:  { name: 'Raspberries',  color: '#d42048', accent: '#7a0820', shape: 'berries' },
   orange:     { name: 'Orange',        color: '#e8803a', accent: '#9a4418', shape: 'segments' },
   pasta:      { name: 'Pasta',         color: '#f0d890', accent: '#9a7028', shape: 'spiral' },
   rice:       { name: 'Rice',          color: '#f6f0e0', accent: '#c4b488', shape: 'grains' },
@@ -81,107 +116,231 @@ const FOOD_CATALOG = {
   popcorn:      { name: 'Popcorn',        color: '#f4e068', accent: '#c09818', shape: 'cloud' },
   pretzel:      { name: 'Pretzel',        color: '#c89050', accent: '#785018', shape: 'knot' },
   granola:      { name: 'Granola',        color: '#d8a850', accent: '#885020', shape: 'clusters' },
-  scrambledegg:  { name: 'Scrambled eggs',  color: '#f8e070', accent: '#c09820', shape: 'cloud'   },
-  mashedpotato:  { name: 'Mashed potatoes', color: '#f0e8c8', accent: '#b8a060', shape: 'bowl'    },
-  frenchtoast:   { name: 'French toast',    color: '#d4a050', accent: '#8a5010', shape: 'square'  },
-  tatertots:     { name: 'Tater tots',      color: '#e8c060', accent: '#9a7018', shape: 'ovals'   },
-  chocolatemilk: { name: 'Chocolate milk',  color: '#5a3018', accent: '#c89058', shape: 'glass'   },
-  lasagna:       { name: 'Lasagna',         color: '#d45030', accent: '#8a2010', shape: 'square'  },
-  garlicbread:   { name: 'Garlic bread',    color: '#d4a050', accent: '#8a5820', shape: 'bar'     },
-  ramen:         { name: 'Ramen',           color: '#e8c870', accent: '#9a7828', shape: 'bowl'    },
-  eggroll:       { name: 'Egg roll',        color: '#c89050', accent: '#7a5018', shape: 'bar'     },
-  tacos:         { name: 'Tacos',           color: '#e8c060', accent: '#9a7018', shape: 'wedge'   },
-  burrito:       { name: 'Burrito',         color: '#e8d0a0', accent: '#a08040', shape: 'roll'    },
-  naan:          { name: 'Naan',            color: '#e8c888', accent: '#a07830', shape: 'oval'    },
-  butterchicken: { name: 'Butter chicken',  color: '#e87028', accent: '#c04810', shape: 'bowl'    },
-  samosa:        { name: 'Samosa',          color: '#d4a850', accent: '#8a6020', shape: 'triangle' },
-  dal:           { name: 'Dal',             color: '#d4883a', accent: '#8a4818', shape: 'bowl'    },
+  snappeas:     { name: 'Snap peas',      color: '#7ab048', accent: '#3a6018', shape: 'pods' },
+  fries:        { name: 'French fries',   color: '#f0c860', accent: '#a07820', shape: 'bar' },
+  hotdog:       { name: 'Hot dog',        color: '#d4784a', accent: '#8a3820', shape: 'bar' },
+  // Wave 2 additions
+  cantaloupe:      { name: 'Cantaloupe',          color: '#f0a840', accent: '#c06818', shape: 'wedge' },
+  honeydew:        { name: 'Honeydew',             color: '#b8d88a', accent: '#5a8830', shape: 'wedge' },
+  mandarin:        { name: 'Mandarin',             color: '#f08030', accent: '#c04810', shape: 'segments' },
+  hashbrowns:      { name: 'Hash browns',          color: '#d4a860', accent: '#8a5820', shape: 'round' },
+  bacon:           { name: 'Bacon',                color: '#c85a3a', accent: '#7a2810', shape: 'bar' },
+  burger:          { name: 'Burger',               color: '#8a5830', accent: '#4a2810', shape: 'round' },
+  dumplings:       { name: 'Dumplings',            color: '#f0e0c0', accent: '#a08050', shape: 'ovals' },
+  sushi:           { name: 'Sushi roll',           color: '#f4f0e8', accent: '#606060', shape: 'round' },
+  mac:             { name: 'Mac & cheese',         color: '#f0c048', accent: '#a07018', shape: 'bowl' },
+  pizza:           { name: 'Pizza',                color: '#e05830', accent: '#8a2010', shape: 'wedge' },
+  grilledcheese:   { name: 'Grilled cheese',       color: '#d4a040', accent: '#8a5818', shape: 'square' },
+  quesadilla:      { name: 'Quesadilla',           color: '#e8c060', accent: '#a07820', shape: 'wedge' },
+  pbj:             { name: 'PB&J',                 color: '#c8885a', accent: '#7a4820', shape: 'square' },
+  friedrice:       { name: 'Fried rice',           color: '#e8d080', accent: '#9a7020', shape: 'bowl' },
+  icecream:        { name: 'Ice cream',            color: '#f8f0e8', accent: '#d0b0a0', shape: 'round' },
+  greekyogurt:     { name: 'Greek yogurt',         color: '#f4f2ee', accent: '#c8c0b0', shape: 'bowl' },
+  cookie:          { name: 'Cookie',               color: '#c89058', accent: '#7a5020', shape: 'round' },
+  goldfish:        { name: 'Goldfish crackers',     color: '#e8884a', accent: '#9a4810', shape: 'ovals' },
+  donut:           { name: 'Donut',                color: '#e8c080', accent: '#9a6828', shape: 'ring' },
+  bagel:           { name: 'Bagel',                color: '#d4a868', accent: '#8a5828', shape: 'ring' },
+  applejuice:      { name: 'Apple juice',          color: '#e8d070', accent: '#a09020', shape: 'glass' },
+  oj:              { name: 'Orange juice',         color: '#f0a840', accent: '#c06818', shape: 'glass' },
+  // Wave 3 additions
+  guacamole:       { name: 'Guacamole',            color: '#6a9840', accent: '#2a5010', shape: 'bowl' },
+  coleslaw:        { name: 'Coleslaw',             color: '#e8e0c8', accent: '#a09060', shape: 'bowl' },
+  chickennoodlesoup:{ name: 'Chicken noodle soup', color: '#e8c068', accent: '#9a7020', shape: 'bowl' },
+  spagmeatballs:   { name: 'Spaghetti & meatballs',color: '#e04030', accent: '#8a1808', shape: 'bowl' },
+  beefstew:        { name: 'Beef stew',            color: '#8a4828', accent: '#4a2010', shape: 'bowl' },
+  cod:             { name: 'Cod',                  color: '#f0e8d0', accent: '#a09060', shape: 'bar' },
+  onigiri:         { name: 'Onigiri',              color: '#f4f0e8', accent: '#c0b890', shape: 'triangle' },
+  eggsandwich:     { name: 'Egg sandwich',         color: '#f4e070', accent: '#c09020', shape: 'square' },
+  creamcheese:     { name: 'Cream cheese',         color: '#f8f4ee', accent: '#d0c8b8', shape: 'spread' },
+  cinnamontoast:   { name: 'Cinnamon toast',       color: '#d4a050', accent: '#8a5010', shape: 'square' },
+  roll:            { name: 'Hawaiian roll',         color: '#e8c888', accent: '#a08030', shape: 'round' },
+  spaghettios:     { name: 'SpaghettiOs',          color: '#e05030', accent: '#8a2010', shape: 'bowl' },
+  nutella:         { name: 'Nutella',              color: '#5a3020', accent: '#c89058', shape: 'spread' },
+  pumpkinseeds:    { name: 'Pumpkin seeds',        color: '#90a840', accent: '#406018', shape: 'ovals' },
+  poptart:         { name: 'Pop-Tart',             color: '#e8a090', accent: '#9a4040', shape: 'square' },
+  jello:           { name: 'Jell-O',               color: '#e04868', accent: '#8a1830', shape: 'round' },
+  marshmallows:    { name: 'Marshmallows',         color: '#f8f4f0', accent: '#d0c8c0', shape: 'cloud' },
+  applepie:        { name: 'Apple pie',            color: '#d4a868', accent: '#8a5820', shape: 'wedge' },
+  smores:          { name: "S'mores",              color: '#6a4020', accent: '#c8a060', shape: 'square' },
+  grahams:         { name: 'Graham crackers',      color: '#d8b068', accent: '#8a6820', shape: 'square' },
+  oreo:            { name: 'Oreo',                 color: '#202020', accent: '#c0c0c0', shape: 'round' },
+  cake:            { name: 'Cake slice',           color: '#f8e8f0', accent: '#d0a0c0', shape: 'wedge' },
+  tortillachips:   { name: 'Tortilla chips',       color: '#e8c878', accent: '#9a7820', shape: 'triangle' },
+  turkeysandwich:  { name: 'Turkey sandwich',      color: '#e8d0b8', accent: '#a08058', shape: 'square' },
+  hamsandwich:     { name: 'Ham sandwich',         color: '#e8b0a0', accent: '#9a5048', shape: 'square' },
+  chickenrice:     { name: 'Chicken & rice',       color: '#e8d888', accent: '#9a8838', shape: 'bowl' },
+  caprisun:        { name: 'Capri Sun',            color: '#f0c030', accent: '#c08010', shape: 'glass' },
+  hotchocolate:    { name: 'Hot chocolate',        color: '#4a2818', accent: '#c89058', shape: 'bowl' },
+  corndog:         { name: 'Corn dog',             color: '#e8c070', accent: '#9a7020', shape: 'bar' },
+  chips:           { name: 'Potato chips',         color: '#f0d860', accent: '#a08820', shape: 'round' },
+  fruitsnack:      { name: 'Fruit snacks',         color: '#e04878', accent: '#8a1838', shape: 'cluster' },
+  popsicle:        { name: 'Popsicle',             color: '#e05890', accent: '#8a1848', shape: 'bar' },
+  nachos:          { name: 'Nachos',               color: '#e8c060', accent: '#9a7018', shape: 'triangle' },
+  scrambledegg:    { name: 'Scrambled eggs',        color: '#f8e070', accent: '#c09820', shape: 'cloud'    },
+  mashedpotato:    { name: 'Mashed potatoes',       color: '#f0e8c8', accent: '#b8a060', shape: 'bowl'     },
+  frenchtoast:     { name: 'French toast',          color: '#d4a050', accent: '#8a5010', shape: 'square'   },
+  tatertots:       { name: 'Tater tots',            color: '#e8c060', accent: '#9a7018', shape: 'ovals'    },
+  chocolatemilk:   { name: 'Chocolate milk',        color: '#5a3018', accent: '#c89058', shape: 'glass'    },
+  lasagna:         { name: 'Lasagna',               color: '#d45030', accent: '#8a2010', shape: 'square'   },
+  garlicbread:     { name: 'Garlic bread',          color: '#d4a050', accent: '#8a5820', shape: 'bar'      },
+  ramen:           { name: 'Ramen',                 color: '#e8c870', accent: '#9a7828', shape: 'bowl'     },
+  eggroll:         { name: 'Egg roll',              color: '#c89050', accent: '#7a5018', shape: 'bar'      },
+  tacos:           { name: 'Tacos',                 color: '#e8c060', accent: '#9a7018', shape: 'wedge'    },
+  burrito:         { name: 'Burrito',               color: '#e8d0a0', accent: '#a08040', shape: 'roll'     },
+  samosa:          { name: 'Samosa',                color: '#d4a850', accent: '#8a6020', shape: 'triangle' },
+  naan:            { name: 'Naan',                  color: '#e8c888', accent: '#a07830', shape: 'oval'     },
 };
 
 function FoodImage({ id, size = 80 }) {
   const f = FOOD_CATALOG[id];
+  const [src, setSrc] = React.useState(`./${id}.png`);
+  const [err, setErr] = React.useState(false);
   if (!f) return null;
+  const handleError = () => {
+    if (src === `./${id}.png`) setSrc(`./${id}.webp`);
+    else setErr(true);
+  };
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: '#ffffff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.03)', flexShrink: 0 }}>
-      <img src={`./${id}.png`} width={size} height={size} draggable={false} style={{ display: 'block', objectFit: 'cover', pointerEvents: 'none' }} />
+    <div style={{ width: size, height: size, borderRadius: '50%', background: err ? f.color : '#ffffff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.03)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {err
+        ? <span style={{ fontSize: Math.round(size * .38), fontWeight: 700, color: f.accent, fontFamily: 'Nunito, system-ui' }}>{f.name[0]}</span>
+        : <img src={src} width={size} height={size} draggable={false} style={{ display: 'block', objectFit: 'contain', pointerEvents: 'none' }} onError={handleError} />
+      }
     </div>
   );
 }
 const FOOD_META = {
-  banana:       { textures: ['soft'],                temps: ['room','cold'], type: 'fruit'   },
-  toast:        { textures: ['crispy'],              temps: ['hot','room'],  type: 'grains'  },
-  egg:          { textures: ['soft'],                temps: ['hot'],         type: 'protein' },
-  berries:      { textures: ['soft'],                temps: ['cold','room'], type: 'fruit'   },
-  yogurt:       { textures: ['creamy','smooth'],     temps: ['cold'],        type: 'dairy'   },
-  cereal:       { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
-  chicken:      { textures: ['crispy','soft'],       temps: ['hot'],         type: 'protein' },
-  cheese:       { textures: ['soft','firm'],         temps: ['cold','room'], type: 'dairy'   },
-  beans:        { textures: ['soft'],                temps: ['hot'],         type: 'protein' },
-  ham:          { textures: ['soft','chewy'],        temps: ['cold','room'], type: 'protein' },
-  tofu:         { textures: ['soft','firm'],         temps: ['room','hot'],  type: 'protein' },
-  fishstick:    { textures: ['crispy'],              temps: ['hot'],         type: 'protein' },
-  carrot:       { textures: ['crunchy'],             temps: ['cold','room'], type: 'veggies' },
-  cucumber:     { textures: ['crunchy'],             temps: ['cold'],        type: 'veggies' },
-  broccoli:     { textures: ['crunchy','tender'],    temps: ['hot','cold'],  type: 'veggies' },
-  corn:         { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
-  peas:         { textures: ['soft'],                temps: ['hot','cold'],  type: 'veggies' },
-  tomato:       { textures: ['juicy','soft'],        temps: ['cold','room'], type: 'veggies' },
-  apple:        { textures: ['crunchy'],             temps: ['cold','room'], type: 'fruit'   },
-  grapes:       { textures: ['firm'],                temps: ['cold'],        type: 'fruit'   },
-  strawberry:   { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
-  orange:       { textures: ['juicy'],               temps: ['cold','room'], type: 'fruit'   },
-  pasta:        { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
-  rice:         { textures: ['soft','sticky'],       temps: ['hot'],         type: 'grains'  },
-  crackers:     { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
-  potato:       { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
-  milk:         { textures: ['smooth'],              temps: ['cold'],        type: 'dairy'   },
-  raisins:      { textures: ['chewy'],               temps: ['room'],        type: 'fruit'   },
-  tuna:         { textures: ['flaky','soft'],        temps: ['cold','room'], type: 'protein' },
-  turkey:       { textures: ['soft','chewy'],        temps: ['cold','hot'],  type: 'protein' },
-  hummus:       { textures: ['creamy','smooth'],     temps: ['cold','room'], type: 'protein' },
-  peanutbutter: { textures: ['creamy','sticky'],     temps: ['room'],        type: 'protein' },
-  sausage:      { textures: ['chewy'],               temps: ['hot'],         type: 'protein' },
-  sweetpotato:  { textures: ['soft'],                temps: ['hot'],         type: 'veggies' },
-  pepper:       { textures: ['crunchy'],             temps: ['cold','room'], type: 'veggies' },
-  celery:       { textures: ['crunchy'],             temps: ['cold'],        type: 'veggies' },
-  cauliflower:  { textures: ['crunchy','soft'],      temps: ['hot','cold'],  type: 'veggies' },
-  edamame:      { textures: ['soft','firm'],         temps: ['hot','cold'],  type: 'protein' },
-  avocado:      { textures: ['creamy','soft'],       temps: ['cold','room'], type: 'fruit'   },
-  watermelon:   { textures: ['juicy'],               temps: ['cold'],        type: 'fruit'   },
-  peach:        { textures: ['soft','juicy'],        temps: ['cold','room'], type: 'fruit'   },
-  mango:        { textures: ['soft','juicy'],        temps: ['cold','room'], type: 'fruit'   },
-  pear:         { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
-  cherry:       { textures: ['firm','juicy'],        temps: ['cold'],        type: 'fruit'   },
-  kiwi:         { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
-  pineapple:    { textures: ['juicy'],               temps: ['cold'],        type: 'fruit'   },
-  bread:        { textures: ['soft'],                temps: ['room'],        type: 'grains'  },
-  wrap:         { textures: ['soft'],                temps: ['room'],        type: 'grains'  },
-  oatmeal:      { textures: ['soft','creamy'],       temps: ['hot'],         type: 'grains'  },
-  noodles:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
-  waffle:       { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
-  pancake:      { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
-  cottage:      { textures: ['creamy','soft'],       temps: ['cold'],        type: 'dairy'   },
-  stringcheese: { textures: ['chewy','firm'],        temps: ['cold','room'], type: 'dairy'   },
-  applesauce:   { textures: ['smooth'],              temps: ['cold','room'], type: 'fruit'   },
-  popcorn:      { textures: ['crunchy','fluffy'],    temps: ['room'],        type: 'grains'  },
-  pretzel:      { textures: ['crunchy','chewy'],     temps: ['room'],        type: 'grains'  },
-  granola:      { textures: ['crunchy'],             temps: ['room'],        type: 'grains'  },
-  raspberries:  { textures: ['soft','juicy'],        temps: ['cold'],        type: 'fruit'   },
-  scrambledegg: { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'protein' },
-  mashedpotato: { textures: ['soft','creamy'],       temps: ['hot'],         type: 'grains'  },
-  frenchtoast:  { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
-  tatertots:    { textures: ['crispy','crunchy'],    temps: ['hot'],         type: 'grains'  },
-  chocolatemilk:{ textures: ['smooth','creamy'],     temps: ['cold'],        type: 'dairy'   },
-  lasagna:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
-  garlicbread:  { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
-  ramen:        { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
-  eggroll:      { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
-  tacos:        { textures: ['crunchy','soft'],      temps: ['hot'],         type: 'grains'  },
-  burrito:      { textures: ['soft','chewy'],        temps: ['hot'],         type: 'grains'  },
-  naan:         { textures: ['soft','fluffy'],       temps: ['hot'],         type: 'grains'  },
-  butterchicken:{ textures: ['soft','creamy'],       temps: ['hot'],         type: 'protein' },
-  samosa:       { textures: ['crispy','soft'],       temps: ['hot'],         type: 'grains'  },
-  dal:          { textures: ['soft','creamy'],       temps: ['hot'],         type: 'protein' },
+  banana:           { textures: ['soft'],              temps: ['room','cold'], type: 'fruit'   },
+  toast:            { textures: ['crispy'],            temps: ['hot','room'],  type: 'grains'  },
+  egg:              { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  berries:          { textures: ['soft'],              temps: ['cold','room'], type: 'fruit'   },
+  yogurt:           { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
+  cereal:           { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  chicken:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
+  cheese:           { textures: ['soft','firm'],       temps: ['cold','room'], type: 'dairy'   },
+  beans:            { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  ham:              { textures: ['soft','chewy'],      temps: ['cold','room'], type: 'protein' },
+  tofu:             { textures: ['soft','firm'],       temps: ['room','hot'],  type: 'protein' },
+  fishstick:        { textures: ['crispy'],            temps: ['hot'],         type: 'protein' },
+  carrot:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
+  cucumber:         { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies' },
+  broccoli:         { textures: ['crunchy','tender'],  temps: ['hot','cold'],  type: 'veggies' },
+  spinach:          { textures: ['soft','tender'],     temps: ['hot','cold'],  type: 'veggies' },
+  lettuce:          { textures: ['crunchy','tender'],  temps: ['cold','room'], type: 'veggies' },
+  peas:             { textures: ['soft'],              temps: ['hot','cold'],  type: 'veggies' },
+  tomato:           { textures: ['juicy','soft'],      temps: ['cold','room'], type: 'veggies' },
+  apple:            { textures: ['crunchy'],           temps: ['cold','room'], type: 'fruit'   },
+  grapes:           { textures: ['firm'],              temps: ['cold'],        type: 'fruit'   },
+  strawberry:       { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
+  raspberries:      { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
+  orange:           { textures: ['juicy'],             temps: ['cold','room'], type: 'fruit'   },
+  pasta:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  rice:             { textures: ['soft','sticky'],     temps: ['hot'],         type: 'grains'  },
+  crackers:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  potato:           { textures: ['soft'],              temps: ['hot'],         type: 'veggies' },
+  milk:             { textures: ['smooth'],            temps: ['cold'],        type: 'dairy'   },
+  raisins:          { textures: ['chewy'],             temps: ['room'],        type: 'fruit'   },
+  tuna:             { textures: ['flaky','soft'],      temps: ['cold','room'], type: 'protein' },
+  turkey:           { textures: ['soft','chewy'],      temps: ['cold','hot'],  type: 'protein' },
+  hummus:           { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'protein' },
+  peanutbutter:     { textures: ['creamy','sticky'],   temps: ['room'],        type: 'protein' },
+  sausage:          { textures: ['chewy'],             temps: ['hot'],         type: 'protein' },
+  sweetpotato:      { textures: ['soft'],              temps: ['hot'],         type: 'veggies' },
+  pepper:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
+  celery:           { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies' },
+  cauliflower:      { textures: ['crunchy','soft'],    temps: ['hot','cold'],  type: 'veggies' },
+  edamame:          { textures: ['soft','firm'],       temps: ['hot','cold'],  type: 'protein' },
+  avocado:          { textures: ['creamy','soft'],     temps: ['cold','room'], type: 'fruit'   },
+  watermelon:       { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
+  peach:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit'   },
+  mango:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit'   },
+  pear:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
+  cherry:           { textures: ['firm','juicy'],      temps: ['cold'],        type: 'fruit'   },
+  kiwi:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
+  pineapple:        { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
+  bread:            { textures: ['soft'],              temps: ['room'],        type: 'grains'  },
+  wrap:             { textures: ['soft'],              temps: ['room'],        type: 'grains'  },
+  oatmeal:          { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
+  noodles:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  waffle:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  pancake:          { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
+  cottage:          { textures: ['creamy','soft'],     temps: ['cold'],        type: 'dairy'   },
+  stringcheese:     { textures: ['chewy','firm'],      temps: ['cold','room'], type: 'dairy'   },
+  applesauce:       { textures: ['smooth'],            temps: ['cold','room'], type: 'fruit'   },
+  popcorn:          { textures: ['crunchy','fluffy'],  temps: ['room'],        type: 'grains'  },
+  pretzel:          { textures: ['crunchy','chewy'],   temps: ['room'],        type: 'grains'  },
+  granola:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  snappeas:         { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
+  fries:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  hotdog:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
+  cantaloupe:       { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit'   },
+  honeydew:         { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit'   },
+  mandarin:         { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
+  hashbrowns:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  bacon:            { textures: ['crispy','chewy'],    temps: ['hot'],         type: 'protein' },
+  burger:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
+  dumplings:        { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
+  sushi:            { textures: ['soft','firm'],       temps: ['cold','room'], type: 'grains'  },
+  mac:              { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
+  pizza:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  grilledcheese:    { textures: ['crispy','gooey'],    temps: ['hot'],         type: 'grains'  },
+  quesadilla:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  pbj:              { textures: ['soft','sticky'],     temps: ['room'],        type: 'grains'  },
+  friedrice:        { textures: ['soft'],              temps: ['hot'],         type: 'grains'  },
+  icecream:         { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats'  },
+  greekyogurt:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
+  cookie:           { textures: ['crispy','chewy'],    temps: ['room'],        type: 'treats'  },
+  goldfish:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  donut:            { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats'  },
+  bagel:            { textures: ['chewy'],             temps: ['room','hot'],  type: 'grains'  },
+  applejuice:       { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
+  oj:               { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
+  guacamole:        { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'veggies' },
+  coleslaw:         { textures: ['crunchy','soft'],    temps: ['cold'],        type: 'veggies' },
+  chickennoodlesoup:{ textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  spagmeatballs:    { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  beefstew:         { textures: ['soft','tender'],     temps: ['hot'],         type: 'protein' },
+  cod:              { textures: ['flaky','soft'],      temps: ['hot'],         type: 'protein' },
+  onigiri:          { textures: ['soft','sticky'],     temps: ['cold','room'], type: 'grains'  },
+  eggsandwich:      { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  creamcheese:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
+  cinnamontoast:    { textures: ['crispy'],            temps: ['hot'],         type: 'grains'  },
+  roll:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'grains'  },
+  spaghettios:      { textures: ['soft'],              temps: ['hot'],         type: 'grains'  },
+  nutella:          { textures: ['creamy','smooth'],   temps: ['room'],        type: 'protein' },
+  pumpkinseeds:     { textures: ['crunchy'],           temps: ['room'],        type: 'protein' },
+  poptart:          { textures: ['crispy','soft'],     temps: ['hot','room'],  type: 'treats'  },
+  jello:            { textures: ['smooth'],            temps: ['cold'],        type: 'treats'  },
+  marshmallows:     { textures: ['soft','fluffy','sticky'], temps: ['room'],   type: 'treats'  },
+  applepie:         { textures: ['soft','crispy'],     temps: ['hot','room'],  type: 'treats'  },
+  smores:           { textures: ['soft','gooey','crunchy'], temps: ['hot'],    type: 'treats'  },
+  grahams:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  oreo:             { textures: ['crunchy','creamy'],  temps: ['room'],        type: 'treats'  },
+  cake:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats'  },
+  tortillachips:    { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  turkeysandwich:   { textures: ['soft'],              temps: ['cold','room'], type: 'grains'  },
+  hamsandwich:      { textures: ['soft'],              temps: ['cold','room'], type: 'grains'  },
+  chickenrice:      { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  caprisun:         { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
+  hotchocolate:     { textures: ['smooth','creamy'],   temps: ['hot'],         type: 'dairy'   },
+  corndog:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
+  chips:            { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
+  fruitsnack:       { textures: ['chewy','sticky'],    temps: ['room'],        type: 'fruit'   },
+  popsicle:         { textures: ['smooth'],            temps: ['frozen'],      type: 'treats'  },
+  nachos:           { textures: ['crunchy'],           temps: ['hot'],         type: 'grains'  },
+  scrambledegg:     { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'protein' },
+  mashedpotato:     { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
+  frenchtoast:      { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
+  tatertots:        { textures: ['crispy','crunchy'],  temps: ['hot'],         type: 'grains'  },
+  chocolatemilk:    { textures: ['smooth','creamy'],   temps: ['cold'],        type: 'dairy'   },
+  lasagna:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  garlicbread:      { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  ramen:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  eggroll:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  tacos:            { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'grains'  },
+  burrito:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
+  samosa:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
+  naan:             { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
 };
 Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
   </script>
@@ -190,21 +349,21 @@ Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
   <script type="text/babel">
 const PLATE_TYPES = [
   { id: 'basic',         label: 'Basic',       caption: 'Round plate'        },
-  { id: 'divided',       label: 'Divided',     caption: 'Three sections'     },
   { id: 'rainbow',       label: 'Rainbow',     caption: 'Color by color'     },
   { id: 'one-new-thing', label: '1 New Thing', caption: 'Spotlight one food' },
-  { id: 'snack',         label: 'Snack',       caption: 'Smaller tray'       },
+  { id: 'snack',         label: 'Snack',       caption: 'Smaller plate'      },
 ];
 
-function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e4', rimInset = 18 }) {
+function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e4', rimInset = 18, chip = false }) {
+  const svgStyle = { position: 'absolute', top: rimInset, left: rimInset, width: `calc(100% - ${rimInset * 2}px)`, height: `calc(100% - ${rimInset * 2}px)`, pointerEvents: 'none', display: 'block' };
   if (type === 'divided') {
     return (
-      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
+      <svg viewBox="0 0 100 100" style={svgStyle}>
         <defs><clipPath id="pp-clip-div"><circle cx="50" cy="50" r="50" /></clipPath></defs>
-        <g clipPath="url(#pp-clip-div)" stroke="#b0b0b0" strokeWidth="1.5" strokeLinecap="round">
-          <line x1="50" y1="50" x2="50" y2="0" />
-          <line x1="50" y1="50" x2="6.7"  y2="75" />
+        <g clipPath="url(#pp-clip-div)" stroke={rimColor} strokeWidth="0.5" strokeLinecap="round">
+          <line x1="50" y1="50" x2="50"  y2="0"  />
           <line x1="50" y1="50" x2="93.3" y2="75" />
+          <line x1="50" y1="50" x2="6.7"  y2="75" />
         </g>
       </svg>
     );
@@ -214,7 +373,7 @@ function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e
     const cx = 50, cy = 50, r = 50;
     const toXY = (deg) => [cx + r * Math.cos((deg - 90) * Math.PI / 180), cy + r * Math.sin((deg - 90) * Math.PI / 180)];
     return (
-      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
+      <svg viewBox="0 0 100 100" style={svgStyle}>
         <defs><clipPath id="pp-clip-rain"><circle cx="50" cy="50" r="50" /></clipPath></defs>
         <g clipPath="url(#pp-clip-rain)">
           {wedges.map((color, i) => {
@@ -227,9 +386,17 @@ function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e
     );
   }
   if (type === 'one-new-thing') {
+    if (chip) {
+      return (
+        <svg viewBox="0 0 100 100" style={svgStyle}>
+          <polygon points="50,28 54.5,41.5 69,41.5 57.5,50 62,63.5 50,55 38,63.5 42.5,50 31,41.5 45.5,41.5" fill="#f5c842" opacity="0.9" />
+        </svg>
+      );
+    }
     return (
-      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: rimInset, pointerEvents: 'none' }}>
-        <polygon points="50,28 54.5,41.5 69,41.5 57.5,50 62,63.5 50,55 38,63.5 42.5,50 31,41.5 45.5,41.5" fill="#f5c842" opacity="0.9" />
+      <svg viewBox="0 0 100 100" style={svgStyle}>
+        <circle cx="68" cy="32" r="16" fill="#f5c842" fillOpacity="0.18" stroke="#f5c842" strokeWidth="1.5" strokeDasharray="3,2" />
+        <polygon points="68,23 70.65,28.36 76.56,29.22 72.28,33.39 73.29,39.28 68,36.5 62.71,39.28 63.72,33.39 59.44,29.22 65.35,28.36" fill="#f5c842" opacity="0.9" />
       </svg>
     );
   }
@@ -243,7 +410,7 @@ function PlateChip({ type, size = 40 }) {
     <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <div style={{ width: px, height: px, borderRadius: '50%', position: 'relative', background: 'radial-gradient(circle at 35% 30%, #fff 0%, #ffffff 55%, #e4e4e4 100%)', boxShadow: '0 1px 3px rgba(60,40,20,.12), inset 0 1px 0 rgba(255,255,255,.6)' }}>
         <div style={{ position: 'absolute', inset: Math.max(3, px * 0.18), borderRadius: '50%', boxShadow: 'inset 0 0 0 1px #e4e4e4', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', inset: Math.max(3, px * 0.18) }}><PlateShape type={type} rimInset={0} /></div>
+        <div style={{ position: 'absolute', inset: Math.max(3, px * 0.18) }}><PlateShape type={type} rimInset={0} chip={true} /></div>
       </div>
     </div>
   );
@@ -293,8 +460,9 @@ const CHILD_COLORS = {
   plate: '#ffffff', plateRim: '#e4e4e4', plateShadow: 'rgba(0,0,0,.10)',
 };
 
-function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic', itemSize = 149 }) {
-  const plateRef = React.useRef(null);
+function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic', itemSize = 149, outerRef }) {
+  const localRef = React.useRef(null);
+  const plateRef = outerRef || localRef;
   const visualSize = plateType === 'snack' ? size * 0.72 : size;
   const [jiggling, setJiggling] = React.useState(false);
   const onItemPointerDown = (e, item) => {
@@ -309,26 +477,31 @@ function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic
     const grabY = (e.clientY - r0.top) / r0.height * 100 - item.y;
     const start = { x: e.clientX, y: e.clientY };
     let moved = false;
+    let rafId = null;
     const longPress = setTimeout(() => { if (!moved) setJiggling(true); }, 500);
     const move = (ev) => {
       const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
       if (!moved && Math.hypot(dx, dy) > 4) { moved = true; clearTimeout(longPress); }
-      if (!moved) return;
-      const r = plate.getBoundingClientRect();
-      const nx_raw = (ev.clientX - r.left) / r.width * 100 - grabX;
-      const ny_raw = (ev.clientY - r.top) / r.height * 100 - grabY;
-      const ddx = nx_raw - 50, ddy = ny_raw - 50;
-      const dist = Math.hypot(ddx, ddy);
-      let nx = nx_raw, ny = ny_raw;
-      if (dist > 47) {
-        el.dataset.willRemove = '1';
-        nx = 50 + Math.cos(Math.atan2(ddy, ddx)) * 47;
-        ny = 50 + Math.sin(Math.atan2(ddy, ddx)) * 47;
-      } else { delete el.dataset.willRemove; }
-      onMove && onMove(item.uid, nx, ny);
+      if (!moved || rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const r = plate.getBoundingClientRect();
+        const nx_raw = (ev.clientX - r.left) / r.width * 100 - grabX;
+        const ny_raw = (ev.clientY - r.top) / r.height * 100 - grabY;
+        const ddx = nx_raw - 50, ddy = ny_raw - 50;
+        const dist = Math.hypot(ddx, ddy);
+        let nx = nx_raw, ny = ny_raw;
+        if (dist > 47) {
+          el.dataset.willRemove = '1';
+          nx = 50 + Math.cos(Math.atan2(ddy, ddx)) * 47;
+          ny = 50 + Math.sin(Math.atan2(ddy, ddx)) * 47;
+        } else { delete el.dataset.willRemove; }
+        onMove && onMove(item.uid, nx, ny);
+      });
     };
     const up = () => {
       clearTimeout(longPress);
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
       el.removeEventListener('pointermove', move);
       el.removeEventListener('pointerup', up);
       el.removeEventListener('pointercancel', up);
@@ -390,7 +563,9 @@ function PlateSelectScreen({ childName, onSelect, T }) {
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '40px 60px', animation: 'ppSelectIn .3s ease-out' }}>
       <img src="./bg_food_pattern.png" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.1, mixBlendMode: 'multiply', pointerEvents: 'none' }} />
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', marginBottom: 36 }}>
-        <div style={{ fontFamily: T.displayFont, fontSize: 42, fontWeight: 500, letterSpacing: -.5, color: CHILD_COLORS.ink }}>Hi {childName}!</div>
+        {childName && (
+          <div style={{ fontFamily: T.displayFont, fontSize: 42, fontWeight: 500, letterSpacing: -.5, color: CHILD_COLORS.ink }}>Hi {childName}!</div>
+        )}
         <div style={{ fontFamily: T.displayFont, fontSize: 24, color: CHILD_COLORS.muted, marginTop: 8 }}>Which plate today?</div>
       </div>
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 18 }}>
@@ -406,32 +581,40 @@ function PlateSelectScreen({ childName, onSelect, T }) {
           );
         })}
       </div>
-      <img src="./platey_home_transparent.png" width={110} style={{ position: 'absolute', bottom: 36, right: 56, display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out infinite', pointerEvents: 'none', zIndex: 1 }} />
+      <img src="./platey_home_transparent.png" width={180} style={{ position: 'absolute', bottom: 24, right: 40, display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out infinite', pointerEvents: 'none', zIndex: 1 }} />
     </div>
   );
 }
 
 function PlateyReaction({ count }) {
-  const prev = React.useRef(count);
-  const [celebrate, setCelebrate] = React.useState(false);
+  const prev = React.useRef(0);
+  const [phase, setPhase] = React.useState('idle');
   React.useEffect(() => {
-    if (count >= 3 && prev.current < 3) { setCelebrate(true); setTimeout(() => setCelebrate(false), 1400); }
+    const was = prev.current;
     prev.current = count;
+    if (count === 0) { setPhase('idle'); return; }
+    if (was === 0 && count === 1) {
+      setPhase('belly');
+      const t = setTimeout(() => setPhase('watching'), 2600);
+      return () => clearTimeout(t);
+    }
+    if (count >= 3 && was < 3) {
+      setPhase('excited');
+      const t = setTimeout(() => setPhase('watching'), 1600);
+      return () => clearTimeout(t);
+    }
+    setPhase(p => p === 'belly' || p === 'excited' ? p : 'watching');
   }, [count]);
-  const state = celebrate ? 'happy' : count === 0 ? 'welcome' : count <= 2 ? 'watching' : 'settled';
+  const src = phase === 'excited' ? './platey_celebration_transparent.png' : './platey_home_transparent.png';
+  const anim = { idle: 'ppWelcomeWave 2.4s ease-in-out infinite', belly: 'ppBellyRub .7s ease-in-out infinite', watching: 'ppPlateyWatch 2.2s ease-in-out infinite', excited: 'ppPlateyBounce .6s cubic-bezier(.2,.8,.3,1.2) both' }[phase];
   return (
-    <>
-      <div style={{ position: 'absolute', pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: state === 'welcome' ? 1 : 0, transition: 'opacity .4s ease', zIndex: 2 }}>
-        <img src="./platey_home_transparent.png" width={160} style={{ display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out infinite' }} />
-      </div>
-      <div style={{ position: 'absolute', bottom: -8, left: -8, pointerEvents: 'none', opacity: state === 'happy' ? 1 : 0, transition: 'opacity .25s ease', zIndex: 2 }}>
-        <img src="./platey_celebration_transparent.png" width={88} style={{ display: 'block', animation: 'ppPlateyBounce .6s cubic-bezier(.2,.8,.3,1.2) both' }} />
-      </div>
-    </>
+    <div style={{ position: 'absolute', bottom: 24, left: 36, pointerEvents: 'none', zIndex: 5 }}>
+      <img src={src} width={120} style={{ display: 'block', transformOrigin: '50% 75%', animation: anim }} />
+    </div>
   );
 }
 
-function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {}, onSubmit, sentMenu }) {
+function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onSubmit, sentMenu, onResetCode }) {
   const T = {
     cream: tweaks.bg || CHILD_COLORS.cream, paper: tweaks.paper || CHILD_COLORS.paper,
     accent: tweaks.accent || CHILD_COLORS.sageDeep, accentSoft: tweaks.accentSoft || CHILD_COLORS.sage,
@@ -439,7 +622,8 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
     greeting: tweaks.greeting || `Hello, ${childName}`,
     sendLabel: tweaks.sendLabel || "I'm Done", emptyLabel: tweaks.emptyLabel || 'Pick your plate',
   };
-  const [menuItems, setMenuItems] = React.useState(sentMenu?.items?.length ? sentMenu.items : []);
+  const normMenu = (m) => Array.isArray(m) ? m : (m?.items || []);
+  const [menuItems, setMenuItems] = React.useState(() => normMenu(sentMenu));
   const [items, setItems] = React.useState([]);
   const [confirming, setConfirming] = React.useState(false);
   const [sending, setSending] = React.useState(false);
@@ -449,11 +633,58 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
   const [step, setStep] = React.useState('pick-plate');
   const [tappedId, setTappedId] = React.useState(null);
   const plateRef = React.useRef(null);
+  const plateCircleRef = React.useRef(null);
   const uidRef = React.useRef(10);
+  const ghostRef = React.useRef(null);
+  // On mount, remove any ghost left behind by a previous ChildApp instance
   React.useEffect(() => {
-    if (sentMenu?.plateType) setPlateType(sentMenu.plateType);
-    if (sentMenu?.items?.length) setMenuItems(sentMenu.items);
+    document.querySelectorAll('[data-pyp-ghost]').forEach(el => el.remove());
+  }, []);
+  const [showPlatePicker, setShowPlatePicker] = React.useState(false);
+  const [showCodeHint, setShowCodeHint] = React.useState(false);
+  const [menuArrived, setMenuArrived] = React.useState(false);
+  const prevMenuLenRef = React.useRef(normMenu(sentMenu).length);
+  const platePickerRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!showPlatePicker) return;
+    const h = (e) => { if (platePickerRef.current && !platePickerRef.current.contains(e.target)) setShowPlatePicker(false); };
+    document.addEventListener('pointerdown', h);
+    return () => document.removeEventListener('pointerdown', h);
+  }, [showPlatePicker]);
+  // Clean up any orphaned drag ghost when navigating away from build screen
+  React.useEffect(() => {
+    if (step === 'pick-plate') {
+      if (ghostRef.current) { ghostRef.current.remove(); ghostRef.current = null; }
+      document.querySelectorAll('[data-pyp-ghost]').forEach(el => el.remove());
+      dragSessionRef.current = false;
+      isDragGestureRef.current = false;
+      isTouchDragRef.current = false;
+      setDragActive(false);
+      setDraggingId(null);
+    }
+  }, [step]);
+  React.useEffect(() => {
+    const items = normMenu(sentMenu);
+    const wasEmpty = prevMenuLenRef.current === 0;
+    prevMenuLenRef.current = items.length;
+    if (items.length) {
+      setMenuItems(items);
+      setConfirming(false);
+      setSending(false);
+      setItems([]);
+      if (wasEmpty) setMenuArrived(true);
+    }
   }, [sentMenu]);
+  React.useEffect(() => {
+    if (!menuArrived) return;
+    const t = setTimeout(() => setMenuArrived(false), 4500);
+    return () => clearTimeout(t);
+  }, [menuArrived]);
+  React.useEffect(() => {
+    if (menuItems.length > 0) { setShowCodeHint(false); return; }
+    const t = setTimeout(() => setShowCodeHint(true), 30000);
+    return () => clearTimeout(t);
+  }, [menuItems.length]);
 
   const onDragStart = (e, id) => {
     e.dataTransfer.setData('text/food', id);
@@ -475,10 +706,11 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
   };
   const onDragOver = (e) => e.preventDefault();
   const onDrop = (e) => {
+    if (isTouchDragRef.current) return;
     e.preventDefault();
     const id = e.dataTransfer.getData('text/food') || draggingId;
-    if (!id || !plateRef.current) return;
-    const r = plateRef.current.getBoundingClientRect();
+    if (!id || !plateCircleRef.current) return;
+    const r = plateCircleRef.current.getBoundingClientRect();
     const cx = (e.clientX - r.left) / r.width * 100;
     const cy = (e.clientY - r.top) / r.height * 100;
     const dx = cx - 50, dy = cy - 50;
@@ -492,6 +724,114 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
     setDragActive(false); setDraggingId(null);
   };
   const onDragEnd = () => { setDragActive(false); setDraggingId(null); };
+
+  // touch drag — pointer-event based for iOS Safari
+  const isDragGestureRef = React.useRef(false);
+  const isTouchDragRef = React.useRef(false);
+  const dragSessionRef = React.useRef(false);
+  const startTouchDrag = (e, id) => {
+    if (e.pointerType === 'mouse') return;
+    if (dragSessionRef.current) return;
+    dragSessionRef.current = true;
+    isDragGestureRef.current = false;
+    isTouchDragRef.current = false;
+    // Capture immediately so iOS can't steal the pointer for scroll
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+    const startX = e.clientX, startY = e.clientY;
+    let rafId = null;
+    let pendingX = startX, pendingY = startY;
+    const onMove = (ev) => {
+      ev.preventDefault();
+      if (!dragSessionRef.current) return;
+      if (!isDragGestureRef.current) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 8) {
+          isDragGestureRef.current = true;
+          isTouchDragRef.current = true;
+          setDragActive(true);
+          setDraggingId(id);
+          const ghost = document.createElement('div');
+          ghost.dataset.pypGhost = '1';
+          ghost.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-62%) scale(1.18);filter:drop-shadow(0 18px 36px rgba(0,0,0,.28)) drop-shadow(0 4px 10px rgba(0,0,0,.14));will-change:left,top;';
+          const img = document.createElement('img');
+          img.src = `./${id}.png`;
+          img.onerror = () => { img.src = `./${id}.webp`; };
+          img.style.cssText = 'width:100px;height:100px;display:block;object-fit:cover;border-radius:50%;';
+          ghost.appendChild(img);
+          ghost.style.left = startX + 'px';
+          ghost.style.top = startY + 'px';
+          document.body.appendChild(ghost);
+          ghostRef.current = ghost;
+        }
+        return;
+      }
+      pendingX = ev.clientX; pendingY = ev.clientY;
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          if (ghostRef.current) { ghostRef.current.style.left = pendingX + 'px'; ghostRef.current.style.top = pendingY + 'px'; }
+        });
+      }
+    };
+    const removeGhost = (animate) => {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      const g = ghostRef.current;
+      if (!g) return;
+      ghostRef.current = null;
+      if (animate) {
+        g.style.transition = 'transform .18s ease-in, opacity .18s ease-in';
+        g.style.transform = 'translate(-50%,-62%) scale(0.5)';
+        g.style.opacity = '0';
+        setTimeout(() => g.remove(), 200);
+      } else {
+        g.remove();
+      }
+    };
+    const endSession = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onCancel);
+      dragSessionRef.current = false;
+    };
+    // pointercancel: browser took over — clear ghost, let onDrop handle placement
+    const onCancel = () => {
+      endSession();
+      removeGhost(false);
+      setDragActive(false);
+      setDraggingId(null);
+      isDragGestureRef.current = false;
+      isTouchDragRef.current = false;
+    };
+    const onUp = (ev) => {
+      endSession();
+      removeGhost(true);
+      setDragActive(false);
+      setDraggingId(null);
+      const wasGesture = isDragGestureRef.current;
+      if (wasGesture && plateCircleRef.current) {
+        const r = plateCircleRef.current.getBoundingClientRect();
+        const cx = (ev.clientX - r.left) / r.width * 100;
+        const cy = (ev.clientY - r.top) / r.height * 100;
+        if (cx >= 0 && cx <= 100 && cy >= 0 && cy <= 100) {
+          const dx = cx - 50, dy = cy - 50;
+          const dist = Math.hypot(dx, dy);
+          const x = dist > 46 ? 50 + Math.cos(Math.atan2(dy, dx)) * 44 : cx;
+          const y = dist > 46 ? 50 + Math.sin(Math.atan2(dy, dx)) * 44 : cy;
+          setItems(xs => xs.some(it => it.id === id) ? xs : [...xs, { uid: uidRef.current++, id, x, y }]);
+        }
+      }
+      // keep both refs true for 600ms: blocks iOS synthetic click and late HTML5 drop
+      if (wasGesture) {
+        setTimeout(() => { isDragGestureRef.current = false; isTouchDragRef.current = false; }, 600);
+      } else {
+        isDragGestureRef.current = false;
+        isTouchDragRef.current = false;
+      }
+    };
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onCancel);
+  };
+
   const onTapAdd = (id) => {
     if (items.some(it => it.id === id)) return;
     // item radius ~13% of plate coords; keep centers ≥28% apart and ≥13% from edge
@@ -524,8 +864,25 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
         @keyframes ppPlateyBounce { 0%{transform:scale(.75) translateY(14px);opacity:0} 60%{transform:scale(1.06) translateY(-5px);opacity:1} 80%{transform:scale(.97) translateY(2px)} 100%{transform:scale(1) translateY(0)} }
         @keyframes ppWelcomeWave { 0%,100%{transform:rotate(0deg)} 15%{transform:rotate(-7deg)} 30%{transform:rotate(7deg)} 45%{transform:rotate(-7deg)} 60%{transform:rotate(5deg)} 75%{transform:rotate(-2deg)} 88%{transform:rotate(1deg)} }
         @keyframes ppPlateyWatch { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-7px) rotate(4deg)} }
+        @keyframes ppBellyRub { 0%{transform:rotate(-6deg) translateY(0)} 25%{transform:rotate(0deg) translateY(-5px) scaleX(1.07)} 50%{transform:rotate(6deg) translateY(0)} 75%{transform:rotate(0deg) translateY(5px) scaleX(0.94)} 100%{transform:rotate(-6deg) translateY(0)} }
         @keyframes ppSelectIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+        @keyframes ppMenuArrivedIn { from{opacity:0;transform:translateY(-24px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
       `}</style>
+      {menuArrived && (
+        <div onClick={() => setMenuArrived(false)} style={{ position: 'absolute', top: 24, left: 0, right: 0, zIndex: 100, display: 'flex', justifyContent: 'center', pointerEvents: 'auto', animation: 'ppMenuArrivedIn .4s cubic-bezier(.2,.9,.3,1)' }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: '16px 28px 16px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 10px 36px rgba(40,30,20,.2)', cursor: 'pointer' }}>
+            <img src="./platey_celebration_transparent.png" style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, color: CHILD_COLORS.ink, letterSpacing: -.3, lineHeight: 1.2 }}>
+                {childName ? `${childName}, your menu is ready!` : 'Your menu is ready!'}
+              </div>
+              <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 14, color: CHILD_COLORS.muted, marginTop: 4 }}>
+                {step === 'pick-plate' ? 'Pick a plate to start choosing.' : 'Check out your options!'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {step === 'pick-plate'
         ? <PlateSelectScreen childName={childName} onSelect={(id) => { setPlateType(id); setStep('build'); }} T={T} />
         : (
@@ -534,29 +891,42 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
         <div ref={plateRef} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd} style={{ width: '56%', height: '100%', display: 'flex', flexDirection: 'column', padding: '32px 40px', position: 'relative' }}>
           <img src="./bg_food_pattern.png" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12, mixBlendMode: 'multiply', pointerEvents: 'none', zIndex: 0 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative', zIndex: 10 }}>
-            <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, letterSpacing: -.3 }}>Hi {childName}!</div>
+            <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, letterSpacing: -.3 }}>Hi {childName || 'there'}!</div>
             <div style={{ flex: 1 }} />
             {items.length > 0 && (
               <button onClick={() => { setItems([]); setStep('pick-plate'); }} style={{ border: 'none', background: 'transparent', fontFamily: 'Nunito, system-ui', fontSize: 13, fontWeight: 600, color: CHILD_COLORS.muted, cursor: 'pointer', padding: '6px 10px' }}>Start over</button>
             )}
-            <button onClick={() => setStep('pick-plate')} style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e4dcc8', background: '#fbf6ea', padding: '6px 12px 6px 8px', borderRadius: 899, cursor: 'pointer', boxShadow: '0 1px 2px rgba(60,40,20,.04)' }}>
-              <PlateChip type={plateType} size={28} />
-              <span style={{ fontFamily: 'Nunito, system-ui', fontSize: 14, fontWeight: 600, color: CHILD_COLORS.muted }}>Change plate</span>
-            </button>
+            <div ref={platePickerRef} style={{ position: 'relative' }}>
+              <button onClick={() => setShowPlatePicker(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e4dcc8', background: '#fbf6ea', padding: '6px 12px 6px 8px', borderRadius: 899, cursor: 'pointer', boxShadow: '0 1px 2px rgba(60,40,20,.04)' }}>
+                <PlateChip type={plateType} size={28} />
+                <span style={{ fontFamily: 'Nunito, system-ui', fontSize: 14, fontWeight: 600, color: CHILD_COLORS.muted }}>Change plate</span>
+              </button>
+              {showPlatePicker && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50, background: '#fbf6ea', border: '1px solid #e4dcc8', borderRadius: 16, padding: 10, display: 'grid', gridTemplateColumns: 'repeat(4, 110px)', gap: 6, boxShadow: '0 12px 40px rgba(60,40,20,.14), 0 2px 8px rgba(60,40,20,.07)' }}>
+                  {PLATE_TYPES.map(pt => {
+                    const selected = pt.id === plateType;
+                    return (
+                      <button key={pt.id} onClick={() => { setPlateType(pt.id); setShowPlatePicker(false); }} style={{ border: selected ? `1.5px solid ${T.accent}` : '1.5px solid transparent', background: selected ? '#fff' : 'transparent', borderRadius: 12, padding: '12px 8px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'background .15s, border-color .15s' }}>
+                        <PlateChip type={pt.id} size={56} />
+                        <div style={{ fontFamily: T.displayFont, fontSize: 15, fontWeight: 500, color: CHILD_COLORS.ink, letterSpacing: -.1 }}>{pt.label}</div>
+                        <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 11, color: CHILD_COLORS.muted, lineHeight: 1.2, textAlign: 'center' }}>{pt.caption}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: -20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-              <Plate size={504} items={items} onRemove={removeItem} onMove={moveItem} active={dragActive} plateType={plateType} />
+              <Plate size={504} items={items} onRemove={removeItem} onMove={moveItem} active={dragActive} plateType={plateType} outerRef={plateCircleRef} />
               {plateType === 'one-new-thing' && (
-                <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, color: CHILD_COLORS.muted, letterSpacing: -.3, textAlign: 'center' }}>Try something new and yummy!</div>
+                <div style={{ fontFamily: T.displayFont, fontSize: 28, fontWeight: 500, color: CHILD_COLORS.muted, letterSpacing: -.3, textAlign: 'center' }}>Pick something new and yummy!</div>
               )}
             </div>
-            <PlateyReaction count={items.length} />
           </div>
+          <PlateyReaction count={items.length} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 8, minHeight: 68, position: 'relative', zIndex: 1 }}>
-            {items.length === 0 && menuItems.length > 0 && (
-              <div style={{ fontFamily: T.displayFont, fontSize: 28, color: CHILD_COLORS.ink, fontWeight: 500, letterSpacing: -.3 }}>Drag food to plate</div>
-            )}
             {items.length > 0 && (
               <button onClick={() => { setSending(true); setTimeout(() => setConfirming(true), 700); onSubmit && onSubmit({ items, plateType, submittedAt: Date.now() }); }} style={{ border: 'none', padding: '18px 40px', borderRadius: 899, fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, background: T.accent, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', animation: 'ppFadeIn .25s ease' }}>
                 {T.sendLabel}
@@ -566,18 +936,33 @@ function ChildApp({ width = 1180, height = 820, childName = 'Mira', tweaks = {},
         </div>
         {/* food tray */}
         <div style={{ width: '44%', height: '100%', background: T.paper, borderLeft: `1px solid ${CHILD_COLORS.line}`, padding: '32px 28px', display: 'flex', flexDirection: 'column', boxShadow: 'inset 4px 0 12px rgba(60,40,20,.03)' }}>
-          <div style={{ fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, marginBottom: 18 }}>{childName}'s Menu</div>
+          <div style={{ fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, marginBottom: 18 }}>{childName ? `${childName}'s Menu` : "Today's Menu"}</div>
           {menuItems.length > 0 && selectedIds.size === menuItems.length && (
             <div style={{ marginBottom: 14, padding: '10px 14px', background: T.accent + '18', borderRadius: 12, fontFamily: 'Nunito, system-ui', fontSize: 14, fontWeight: 600, color: T.accent, textAlign: 'center' }}>You picked everything! Hit the button when ready.</div>
           )}
           <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignContent: 'start' }}>
             {menuItems.length === 0
-              ? <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10, opacity: .45, pointerEvents: 'none' }}>
-                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={CHILD_COLORS.muted} strokeWidth="1.8" strokeLinecap="round"><circle cx="18" cy="18" r="14"/><path d="M18 11v7l4 4"/></svg>
-                  <div style={{ fontFamily: T.displayFont, fontSize: 16, color: CHILD_COLORS.muted, textAlign: 'center', lineHeight: 1.4 }}>Waiting for today's menu…</div>
+              ? <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10 }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={CHILD_COLORS.muted} strokeWidth="1.8" strokeLinecap="round" style={{ opacity: .45 }}><circle cx="18" cy="18" r="14"/><path d="M18 11v7l4 4"/></svg>
+                  <div style={{ fontFamily: T.displayFont, fontSize: 16, color: CHILD_COLORS.muted, textAlign: 'center', lineHeight: 1.4, opacity: .45 }}>Waiting for today's menu…</div>
+                  {onResetCode && (
+                    <>
+                      <div style={{ padding: '5px 14px', background: 'rgba(0,0,0,.05)', borderRadius: 8, fontFamily: 'Nunito, system-ui', fontSize: 15, fontWeight: 800, color: CHILD_COLORS.muted, letterSpacing: 5 }}>
+                        {localStorage.getItem('pyp_family_code')}
+                      </div>
+                      {showCodeHint && (
+                        <div style={{ padding: '10px 14px', background: '#fdf5e0', border: '1px solid #e8d070', borderRadius: 12, maxWidth: 230, textAlign: 'center' }}>
+                          <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 12, fontWeight: 700, color: '#7a5a10', lineHeight: 1.5 }}>Still waiting? Make sure this code matches what's shown in the parent's Settings tab.</div>
+                        </div>
+                      )}
+                      <button onClick={onResetCode} style={{ border: '1.5px solid #e4dcc8', background: '#fff', fontFamily: 'Nunito, system-ui', fontSize: 13, fontWeight: 600, color: CHILD_COLORS.muted, cursor: 'pointer', padding: '8px 18px', borderRadius: 8 }}>
+                        Change family code
+                      </button>
+                    </>
+                  )}
                 </div>
               : menuItems.map(id => (
-                  <div key={id} onClick={() => { setTappedId(id); setTimeout(() => setTappedId(null), 250); onTapAdd(id); }} style={{ animation: tappedId === id ? 'ppTap .25s cubic-bezier(.2,.8,.3,1.2)' : 'none' }}>
+                  <div key={id} onClick={() => { if (isDragGestureRef.current) return; setTappedId(id); setTimeout(() => setTappedId(null), 250); onTapAdd(id); }} onPointerDown={(e) => startTouchDrag(e, id)} style={{ animation: tappedId === id ? 'ppTap .25s cubic-bezier(.2,.8,.3,1.2)' : 'none', touchAction: 'none', opacity: draggingId === id ? 0.4 : 1, transform: draggingId === id ? 'scale(0.92)' : 'scale(1)', transition: draggingId === id ? 'none' : 'opacity .25s, transform .25s' }}>
                     <TrayCard food={{ id }} onDragStart={onDragStart} isSelected={selectedIds.has(id)} />
                   </div>
                 ))
@@ -679,11 +1064,14 @@ const DS = {
   input: { padding: '11px 14px', radius: 12 },
 };
 
+const StandaloneCtx = React.createContext(false);
+
 function CareStatusBar() {
+  const standalone = React.useContext(StandaloneCtx);
+  if (standalone) return <div style={{ height: 'calc(env(safe-area-inset-top, 44px) + 10px)' }} />;
   return (
     <div style={{ height: 54, padding: '20px 32px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontFamily: careFont, fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink, position: 'relative', zIndex: 5 }}>
       <span>9:41</span>
-      <img src="./pyp_logo.png" style={{ position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)', width: 44, display: 'block' }} />
       <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
         <svg width="17" height="11" viewBox="0 0 17 11" fill={CARE_COLORS.ink}><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="6" rx="0.5"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5"/><rect x="13.5" y="0" width="3" height="11" rx="0.5"/></svg>
         <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke={CARE_COLORS.ink} strokeOpacity=".35"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill={CARE_COLORS.ink}/></svg>
@@ -708,8 +1096,8 @@ function CareTabBar({ active, onTab, hasActivity }) {
   const tabs = [
     { id: 'today', label: 'Menus', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/></svg> },
     { id: 'notification', label: 'Activity', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M4 8a7 7 0 0 1 14 0v5l2 2H2l2-2V8z"/><path d="M9 18a2 2 0 0 0 4 0"/></svg> },
-    { id: 'library', label: 'Pantry', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg> },
-    { id: 'settings', label: 'Settings', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.5 4.5l1.5 1.5M16 16l1.5 1.5M4.5 17.5L6 16M16 6l1.5-1.5"/></svg> },
+    { id: 'library', label: 'Kitchen', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg> },
+    { id: 'settings', label: 'Settings', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
   ];
   return (
     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingBottom: 30, background: 'rgba(251,246,234,.92)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 20 }}>
@@ -729,6 +1117,7 @@ function CareTabBar({ active, onTab, hasActivity }) {
 
 function FoodChip({ id, onRemove, compact }) {
   const f = FOOD_CATALOG[id];
+  if (!f) return null;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: compact ? '6px 10px 6px 6px' : '8px 12px 8px 8px', background: '#fff', borderRadius: 899, border: `1px solid ${CARE_COLORS.lineSoft}`, fontFamily: careFont, fontSize: 14, fontWeight: 500, color: CARE_COLORS.ink }}>
       <FoodImage id={id} size={compact ? 28 : 34} />
@@ -743,11 +1132,11 @@ function FoodChip({ id, onRemove, compact }) {
 }
 
 const KITCHEN = [
-  { label: 'favourites', ids: ['toast', 'pasta', 'banana', 'milk', 'strawberry', 'peas'] },
-  { label: 'Proteins',   ids: ['chicken', 'cheese', 'ham', 'egg', 'yogurt'] },
-  { label: 'Veg',        ids: ['carrot', 'cucumber', 'broccoli', 'corn', 'peas'] },
-  { label: 'Fruit',      ids: ['apple', 'grapes', 'orange', 'banana', 'strawberry'] },
-  { label: 'Grains',     ids: ['crackers', 'rice', 'pasta', 'toast', 'potato'] },
+  { label: 'Fruit',           ids: ['apple', 'applesauce', 'banana', 'strawberry', 'raspberries', 'berries', 'grapes', 'watermelon', 'orange'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'sweetpotato', 'lettuce', 'peas', 'snappeas'] },
+  { label: 'Grains & Sides',  ids: ['rice', 'pasta', 'toast', 'crackers', 'fries', 'potato', 'mac', 'pizza'] },
+  { label: 'Protein & Dairy', ids: ['chicken', 'hotdog', 'egg', 'ham', 'cheese', 'yogurt', 'milk', 'fishstick'] },
+  { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake'] },
 ];
 
 function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFilter, typeFilter, setTypeFilter }) {
@@ -781,13 +1170,13 @@ function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFi
         { value: 'firm',    label: 'Firm'    }, { value: 'sticky', label: 'Sticky' },
       ]} />
       <Row active={tempFilter} onSelect={setTempFilter} options={[
-        { value: 'hot',   label: 'Hot'      }, { value: 'cold', label: 'Cold' },
-        { value: 'room',  label: 'Room Temp' }, { value: 'frozen', label: 'Frozen' },
+        { value: 'hot',    label: 'Hot'      }, { value: 'cold',   label: 'Cold'   },
+        { value: 'room',   label: 'Room Temp' }, { value: 'frozen', label: 'Frozen' },
       ]} />
       <Row active={typeFilter} onSelect={setTypeFilter} options={[
         { value: 'fruit',   label: 'Fruit'   }, { value: 'veggies', label: 'Veggies' },
         { value: 'protein', label: 'Protein' }, { value: 'dairy',   label: 'Dairy'   },
-        { value: 'grains',  label: 'Grains'  },
+        { value: 'grains',  label: 'Grains'  }, { value: 'treats',  label: 'Sweets & Snacks'  },
       ]} />
       {hasAny && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -2, paddingBottom: 6 }}>
@@ -801,49 +1190,66 @@ function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFi
   );
 }
 
-function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu = [], onSetMenu, onSaved, onSendMenu, onOpenPantry, pickedPlate, onViewActivity }) {
+function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = [], onSetMenu, onSaved, onSendMenu, onSaveMenu, onOpenPantry, pickedPlate, onViewActivity, openKitchen, onKitchenOpened, onNewMenu }) {
   const [meal, setMeal] = React.useState('lunch');
-  const [kitchenOpen, setKitchenOpen] = React.useState(false);
+  const [kitchenOpen, setKitchenOpen] = React.useState(openKitchen || false);
+  React.useEffect(() => { if (openKitchen && onKitchenOpened) onKitchenOpened(); }, []);
   const [saved, setSaved] = React.useState(false);
+  const [plateStatusDismissed, setPlateStatusDismissed] = React.useState(false);
   const [plateType, setPlateType] = React.useState('basic');
   const [pickingPlate, setPickingPlate] = React.useState(false);
   const [pendingMeal, setPendingMeal] = React.useState(null);
   const [kitchenQuery, setKitchenQuery] = React.useState('');
+  const [closedKitchenCats, setClosedKitchenCats] = React.useState(new Set());
   const [textureFilter, setTextureFilter] = React.useState(null);
   const [tempFilter, setTempFilter] = React.useState(null);
   const [typeFilter, setTypeFilter] = React.useState(null);
+  const [saveName, setSaveName] = React.useState('');
+  const [menuSaved, setMenuSaved] = React.useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = React.useState(false);
+  const lastSentMenuRef = React.useRef(null);
+  const [menuFull, setMenuFull] = React.useState(false);
+  const MENU_LIMIT = 12;
+  React.useEffect(() => { setPlateStatusDismissed(false); }, [pickedPlate]);
+  React.useEffect(() => {
+    if (saved && lastSentMenuRef.current && JSON.stringify(menu) !== JSON.stringify(lastSentMenuRef.current)) {
+      setSaved(false);
+    }
+  }, [menu]);
+  const handleSaveMenu = () => {
+    if (!saveName.trim()) return;
+    onSaveMenu && onSaveMenu({ name: saveName.trim(), meal, ids: menu, childIds: [], timestamp: new Date().toISOString() });
+    setSaveName(''); setMenuSaved(true);
+  };
   const meals = [
     { id: 'breakfast', label: 'Breakfast' }, { id: 'lunch', label: 'Lunch' },
     { id: 'dinner', label: 'Dinner' },       { id: 'snack', label: 'Snack' },
   ];
-  const [plateStatusFaded, setPlateStatusFaded] = React.useState(false);
-  React.useEffect(() => {
-    if (!pickedPlate) { setPlateStatusFaded(false); return; }
-    setPlateStatusFaded(false);
-    const t = setTimeout(() => setPlateStatusFaded(true), 30000);
-    return () => clearTimeout(t);
-  }, [pickedPlate]);
-  const toggleFood = (id) => onSetMenu(xs => xs.includes(id) ? xs.filter(x => x !== id) : [...xs, id]);
+  const toggleFood = (id) => onSetMenu(xs => {
+    if (xs.includes(id)) return xs.filter(x => x !== id);
+    if (xs.length >= MENU_LIMIT) { setMenuFull(true); setTimeout(() => setMenuFull(false), 2500); return xs; }
+    return [...xs, id];
+  });
   const mealLabel = meals.find(m => m.id === meal)?.label || 'Lunch';
-  const handleSave = () => { setSaved(true); onSendMenu && onSendMenu({ items: menu, plateType }); };
+  const handleSave = () => { lastSentMenuRef.current = [...menu]; setSaved(true); setMenuSaved(false); setNudgeDismissed(false); onSendMenu && onSendMenu({ items: menu, plateType, mealLabel }); };
   const switchMeal = (m) => {
     if (m.id === meal) return;
     if (menu.length > 0) { setPendingMeal(m); return; }
-    setMeal(m.id); onSetMenu([]); setSaved(false);
+    setMeal(m.id); onSetMenu([]); setSaved(false); setPlateStatusDismissed(true);
     if (m.id === 'snack') setPlateType('snack');
   };
   const confirmSwitch = () => {
-    setMeal(pendingMeal.id); onSetMenu([]); setSaved(false);
+    setMeal(pendingMeal.id); onSetMenu([]); setSaved(false); setPlateStatusDismissed(true);
     if (pendingMeal.id === 'snack') setPlateType('snack');
     setPendingMeal(null);
   };
 
   // Build kitchen categories from live kitchenIds prop
   const knownIds = new Set(KITCHEN.flatMap(c => c.ids));
-  const extraIds = kitchenIds.filter(id => !knownIds.has(id));
+  const extraIds = kitchenIds.filter(id => !knownIds.has(id) && FOOD_CATALOG[id]);
   const kitchenCats = [
     ...(extraIds.length > 0 ? [{ label: 'Recently Added', ids: extraIds }] : []),
-    ...KITCHEN.slice(1).map(cat => ({ label: cat.label, ids: cat.ids.filter(id => kitchenIds.includes(id)) })),
+    ...KITCHEN.map(cat => ({ label: cat.label, ids: cat.ids.filter(id => kitchenIds.includes(id) && FOOD_CATALOG[id]) })),
   ].filter(cat => cat.ids.length > 0);
 
   const _now = new Date();
@@ -858,42 +1264,11 @@ function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu 
       <div style={{ flex: 1, overflow: 'auto', padding: '8px 20px 120px', fontFamily: careFont }}>
         <div style={{ marginTop: 8 }}>
           <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase' }}>{dateLabel}</div>
-          <div style={{ fontFamily: serifFont, fontSize: 32, fontWeight: 500, letterSpacing: -.5, marginTop: 4, color: CARE_COLORS.ink, lineHeight: 1.1 }}>{childName}'s Menu</div>
-        </div>
-        {/* Loop status strip: Sent → Waiting → Received */}
-        {(saved || pickedPlate) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, padding: '9px 12px', background: pickedPlate ? '#EEF7E4' : CARE_COLORS.sageSoft, borderRadius: 10, border: `1px solid ${pickedPlate ? '#C3E09A' : CARE_COLORS.sage}`, opacity: pickedPlate && plateStatusFaded ? 0 : 1, maxHeight: pickedPlate && plateStatusFaded ? 0 : 60, marginBottom: pickedPlate && plateStatusFaded ? -14 : 0, overflow: 'hidden', transition: pickedPlate ? 'opacity 0.8s ease, max-height 0.8s ease, margin-bottom 0.8s ease' : 'none', pointerEvents: pickedPlate && plateStatusFaded ? 'none' : 'auto' }}>
-            {pickedPlate ? (
-              <>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0 }}>
-                  <circle cx="7.5" cy="7.5" r="7.5" fill="#6AAF3D" opacity=".2" />
-                  <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="#3A7D0E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span style={{ flex: 1, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>{childName} picked her plate</span>
-                <button onClick={onViewActivity} style={{ border: 'none', background: 'none', fontFamily: careFont, fontSize: 13, fontWeight: 700, color: CARE_COLORS.sageDeep, cursor: 'pointer', padding: 0 }}>View →</button>
-              </>
-            ) : (
-              <>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: CARE_COLORS.sageDeep, flexShrink: 0, animation: 'ppPulse 1.6s ease-in-out infinite' }} />
-                <span style={{ fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>Sent · Waiting for {childName} to pick</span>
-              </>
-            )}
-          </div>
-        )}
-        <div style={{ display: 'flex', gap: 6, marginTop: 14, background: '#fff', borderRadius: 12, padding: 4, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
-          {meals.map(m => (
-            <button key={m.id} onClick={() => switchMeal(m)} style={{ flex: 1, border: 'none', padding: '10px 4px', borderRadius: 8, fontFamily: careFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: meal === m.id ? CARE_COLORS.sageSoft : 'transparent', color: meal === m.id ? CARE_COLORS.sageDeep : CARE_COLORS.muted, transition: 'all .15s' }}>{m.label}</button>
-          ))}
-        </div>
-        {/* Today's Menu */}
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 28, marginBottom: 12 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: CARE_COLORS.ink, letterSpacing: -.2 }}>Today's Menu</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            {menu.length > 0 && <div onClick={() => onSetMenu([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>Clear all</div>}
-            <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontWeight: 500 }}>{menu.length} {menu.length === 1 ? 'item' : 'items'}</div>
+          <div style={{ marginTop: 4 }}>
+            <div style={{ fontFamily: serifFont, fontSize: 32, fontWeight: 500, letterSpacing: -.5, color: CARE_COLORS.ink, lineHeight: 1.1 }}>{childName ? `${childName}'s Menu` : "Today's Menu"}</div>
           </div>
         </div>
-        <div style={{ background: '#fff', borderRadius: 16, padding: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 56 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 56, marginTop: 14 }}>
           {menu.length === 0 && (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0 4px', gap: 4 }}>
               <PlateHero size={72} />
@@ -901,92 +1276,104 @@ function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu 
             </div>
           )}
           {menu.map(id => <FoodChip key={id} id={id} onRemove={() => toggleFood(id)} />)}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 4 : 0 }}>
+          {menu.length > 0 && (
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, fontFamily: careFont, color: menu.length >= MENU_LIMIT ? '#b06a10' : CARE_COLORS.muted }}>{menu.length} / {MENU_LIMIT}</div>
+              <div onClick={() => onSetMenu([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont, padding: '2px 4px' }}>Clear all</div>
+            </div>
+          )}
+          {menuFull && (
+            <div style={{ width: '100%', padding: '8px 12px', background: '#fef3cd', border: '1px solid #e8c040', borderRadius: 8, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: '#7a5a10', textAlign: 'center', animation: 'ppFadeSlideUp .18s ease' }}>
+              Menu is full — remove something to add more
+            </div>
+          )}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 2 : 0 }}>
             <button onClick={() => setKitchenOpen(true)} style={{ padding: '8px 20px', background: CARE_COLORS.sageDeep, border: 'none', borderRadius: 899, cursor: 'pointer', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: '#fbf6ea', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
               Kitchen
             </button>
           </div>
         </div>
-
-        {/* Plate picker row */}
-        <div onClick={() => setPickingPlate(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, padding: '12px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer' }}>
-          <PlateChip type={plateType} size={28} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontWeight: 500 }}>Plate</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink, marginTop: 1 }}>{PLATE_TYPES.find(p => p.id === plateType)?.label}</div>
-          </div>
-          <span style={{ fontSize: 13, color: CARE_COLORS.sageDeep, fontWeight: 600 }}>Change</span>
-        </div>
-
-        {menu.length > 0 && (
-          <div style={{ marginTop: 12, position: 'relative' }}>
-            {!saved && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: CARE_COLORS.sageDeep, animation: 'ppSpin 1.8s ease-in-out infinite', boxShadow: `0 0 0 2px ${CARE_COLORS.sageSoft}` }} />
-                <span style={{ fontFamily: careFont, fontSize: 12, fontWeight: 600, color: CARE_COLORS.sageDeep }}>Ready to send — {childName} is waiting</span>
-              </div>
+        {/* Loop status strip: Sent → Waiting → Received */}
+        {saved && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, padding: '9px 12px', background: pickedPlate && !plateStatusDismissed ? '#EEF7E4' : CARE_COLORS.sageSoft, borderRadius: 10, border: `1px solid ${pickedPlate && !plateStatusDismissed ? '#C3E09A' : CARE_COLORS.sage}` }}>
+            {pickedPlate ? (
+              <>
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0 }}>
+                  <circle cx="7.5" cy="7.5" r="7.5" fill="#6AAF3D" opacity=".2" />
+                  <path d="M4 7.5l2.5 2.5 4.5-4.5" stroke="#3A7D0E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span style={{ flex: 1, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>{childName || 'Your child'} picked their plate</span>
+                <button onClick={onViewActivity} style={{ border: 'none', background: 'none', fontFamily: careFont, fontSize: 13, fontWeight: 700, color: CARE_COLORS.sageDeep, cursor: 'pointer', padding: 0 }}>View →</button>
+              </>
+            ) : (
+              <>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: CARE_COLORS.sageDeep, flexShrink: 0, animation: 'ppPulse 1.6s ease-in-out infinite' }} />
+                <span style={{ fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>Sent · Waiting for {childName || 'your child'} to pick</span>
+              </>
             )}
-            <button onClick={handleSave} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', transition: 'background .2s', animation: saved ? 'ppButtonBounce .5s cubic-bezier(.2,.8,.3,1.2)' : 'none' }}>
-              {saved ? `✓ ${mealLabel} menu sent` : `Send ${childName}'s ${mealLabel} Menu`}
+          </div>
+        )}
+        {menu.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <button onClick={handleSave} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', transition: 'background .2s', animation: saved ? 'ppButtonBounce .5s cubic-bezier(.2,.8,.3,1.2)' : 'none', touchAction: 'manipulation' }}>
+              {saved ? `✓ Menu sent` : `Send ${childName ? `${childName}'s ` : ''}Menu`}
             </button>
+          </div>
+        )}
+        {saved && !menuSaved && !nudgeDismissed && (
+          <div style={{ marginTop: 10, background: '#fff', borderRadius: 12, padding: '14px', border: `1px solid ${CARE_COLORS.line}`, animation: 'ppFadeSlideUp .18s ease' }}>
+            <div style={{ fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink, marginBottom: 10 }}>Save this menu for next time?</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={saveName} onChange={e => setSaveName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveMenu()}
+                placeholder='e.g. "Easy weeknight"'
+                style={{ flex: 1, border: `1px solid ${CARE_COLORS.line}`, borderRadius: 8, padding: '9px 12px', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink, outline: 'none', background: CARE_COLORS.bg }} />
+              <button onClick={handleSaveMenu} disabled={!saveName.trim()}
+                style={{ border: 'none', background: saveName.trim() ? CARE_COLORS.sageDeep : CARE_COLORS.lineSoft, color: saveName.trim() ? '#fbf6ea' : CARE_COLORS.muted, borderRadius: 8, padding: '9px 18px', fontFamily: careFont, fontSize: 14, fontWeight: 700, cursor: saveName.trim() ? 'pointer' : 'default', transition: 'background .15s' }}>
+                Save
+              </button>
+            </div>
+            <div onClick={() => setNudgeDismissed(true)} style={{ marginTop: 8, textAlign: 'center', fontSize: 12, color: CARE_COLORS.muted, fontWeight: 500, cursor: 'pointer', fontFamily: careFont }}>Not this time</div>
+          </div>
+        )}
+        {saved && menuSaved && (
+          <div style={{ marginTop: 10, padding: '11px 14px', background: CARE_COLORS.sageSoft, borderRadius: 12, border: `1px solid ${CARE_COLORS.sage}`, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep }}>
+            ✓ Menu saved
           </div>
         )}
         <div style={{ marginTop: 20 }}>
           <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 8 }}>Saved Menus</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {savedMenus.map(m => (
+            {savedMenus.length === 0 && (
+              <div style={{ padding: '16px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, color: CARE_COLORS.muted, fontFamily: careFont, fontSize: 13, lineHeight: 1.5 }}>
+                Was your meal a hit? Favourite menus will appear here, ready to reuse.
+              </div>
+            )}
+            {savedMenus.map(m => {
+              const d = new Date(m.id);
+              const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              const dateStr = `${months[d.getMonth()]} ${d.getDate()}`;
+              return (
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: CARE_COLORS.ink }}>{m.name}</div>
-                  <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginTop: 2 }}>{m.meal} · {m.ids.length} items</div>
+                  <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginTop: 2 }}>{dateStr} · {m.ids.length} items</div>
                 </div>
-                <button onClick={() => onSetMenu(m.ids)} style={{ border: `1.5px solid ${CARE_COLORS.sage}`, background: 'transparent', color: CARE_COLORS.sageDeep, padding: '7px 14px', borderRadius: 899, fontFamily: careFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Use</button>
+                <button onClick={() => { onSetMenu(m.ids); setMenuSaved(false); setSaved(false); }} style={{ border: `1.5px solid ${CARE_COLORS.sage}`, background: 'transparent', color: CARE_COLORS.sageDeep, padding: '7px 14px', borderRadius: 899, fontFamily: careFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Use</button>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       </div>
 
-      {/* Plate picker sheet */}
-      {pickingPlate && (
-        <div onClick={() => setPickingPlate(false)} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', padding: '14px 20px 40px', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)' }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 16px' }} />
-            <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, color: CARE_COLORS.ink, marginBottom: 20 }}>Choose a plate</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-              {PLATE_TYPES.map(pt => {
-                const selected = pt.id === plateType;
-                return (
-                  <div key={pt.id} onClick={() => { setPlateType(pt.id); setPickingPlate(false); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 4px 10px', borderRadius: 12, border: selected ? `1.5px solid ${CARE_COLORS.sageDeep}` : '1.5px solid transparent', background: selected ? '#fff' : 'transparent', cursor: 'pointer' }}>
-                    <PlateChip type={pt.id} size={52} />
-                    <div style={{ fontFamily: serifFont, fontSize: 13, fontWeight: 500, color: CARE_COLORS.ink, textAlign: 'center' }}>{pt.label}</div>
-                    <div style={{ fontFamily: careFont, fontSize: 10, color: CARE_COLORS.muted, textAlign: 'center', lineHeight: 1.3 }}>{pt.caption}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation — shown when switching meal tabs would wipe a non-empty menu */}
-      {pendingMeal && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 55, background: 'rgba(40,30,20,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', animation: 'ppFadeIn .15s ease' }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '22px 20px 18px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,.18)' }}>
-            <div style={{ fontFamily: serifFont, fontSize: 17, fontWeight: 600, color: CARE_COLORS.ink, marginBottom: 6 }}>Switch to {pendingMeal.label}?</div>
-            <div style={{ fontFamily: careFont, fontSize: 13, color: CARE_COLORS.muted, marginBottom: 18, lineHeight: 1.4 }}>Your {mealLabel} menu ({menu.length} {menu.length === 1 ? 'item' : 'items'}) will be cleared.</div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setPendingMeal(null)} style={{ flex: 1, border: `1.5px solid ${CARE_COLORS.line}`, background: 'transparent', borderRadius: 10, padding: '11px 0', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: CARE_COLORS.mutedStrong, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={confirmSwitch} style={{ flex: 1, border: 'none', background: CARE_COLORS.sageDeep, borderRadius: 10, padding: '11px 0', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Switch</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Kitchen sheet */}
       {kitchenOpen && (
         <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '82%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '82%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)', position: 'relative' }}>
+            {menuFull && (
+              <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10, background: '#1a1612', color: '#fff', borderRadius: 12, padding: '11px 16px', fontFamily: careFont, fontSize: 14, fontWeight: 600, textAlign: 'center', boxShadow: '0 4px 16px rgba(0,0,0,.25)', animation: 'ppFadeSlideUp .22s ease', pointerEvents: 'none' }}>
+                Menu is full (12 / 12) — remove something to add more
+              </div>
+            )}
             <div style={{ padding: '14px 20px 0', flexShrink: 0 }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 16px' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -1016,32 +1403,43 @@ function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu 
                 });
                 const cats = kitchenCats.map(cat => ({ ...cat, ids: filterIds(cat.ids) })).filter(cat => cat.ids.length > 0);
                 if (hasFilter && cats.length === 0) return <div style={{ fontFamily: careFont, fontSize: 14, color: CARE_COLORS.muted, textAlign: 'center', marginTop: 32 }}>No results found</div>;
-                return cats.map(cat => (
-                <div key={cat.label} style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 10, fontFamily: careFont }}>{cat.label}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                    {cat.ids.map(id => {
-                      const onMenu = menu.includes(id);
-                      return (
-                        <div key={id} onClick={() => toggleFood(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: onMenu ? '#E4F3DC' : '#fff', border: onMenu ? `1.5px solid #A9D18E` : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
-                          <FoodImage id={id} size={52} />
-                          <div style={{ fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
-                          {onMenu && (
-                            <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#6B9E52', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4l1.8 1.8L6.5 2"/></svg>
+                return cats.map(cat => {
+                  const isOpen = !closedKitchenCats.has(cat.label);
+                  const toggleCat = () => setClosedKitchenCats(s => { const n = new Set(s); isOpen ? n.add(cat.label) : n.delete(cat.label); return n; });
+                  return (
+                  <div key={cat.label} style={{ marginBottom: 8, background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}`, overflow: 'hidden' }}>
+                    <div onClick={toggleCat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', cursor: 'pointer' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont }}>{cat.label}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: CARE_COLORS.muted, fontFamily: careFont }}>{cat.ids.length}</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={CARE_COLORS.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', flexShrink: 0 }}><path d="M2 4l4 4 4-4"/></svg>
+                      </div>
+                    </div>
+                    {isOpen && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 12px 12px' }}>
+                        {cat.ids.map(id => {
+                          const onMenu = menu.includes(id);
+                          return (
+                            <div key={id} onClick={() => toggleFood(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: onMenu ? '#E4F3DC' : CARE_COLORS.bg, border: onMenu ? `1.5px solid #A9D18E` : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
+                              <FoodImage id={id} size={52} />
+                              <div style={{ fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
+                              {onMenu && (
+                                <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#6B9E52', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4l1.8 1.8L6.5 2"/></svg>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ));
+                );});
               })()}
             </div>
             <div style={{ padding: '12px 20px 24px', flexShrink: 0 }}>
               <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ width: '100%', padding: '13px 0', borderRadius: 12, background: CARE_COLORS.sageDeep, border: 'none', color: '#fbf6ea', fontSize: 15, fontWeight: 600, fontFamily: careFont, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
-                {menu.length > 0 ? `Back to menu · ${menu.length} ${menu.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+                {menu.length > 0 ? `Add to Menu · ${menu.length} / ${MENU_LIMIT}` : 'Add to Menu'}
               </button>
             </div>
           </div>
@@ -1051,26 +1449,25 @@ function CareToday({ childName = 'Mira', savedMenus = [], kitchenIds = [], menu 
   );
 }
 
-function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
+function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLabel = 'Lunch', sentMenuItems = [], savedMenus = [] }) {
   const [saved, setSaved] = React.useState(false);
-  const [dismissed, setDismissed] = React.useState(false);
-  const [swipeX, setSwipeX] = React.useState(0);
-  const [dismissing, setDismissing] = React.useState(false);
-  const handleSwipe = (e) => {
-    const startX = e.clientX;
-    const el = e.currentTarget;
-    el.setPointerCapture(e.pointerId);
-    let dx = 0;
-    const move = (ev) => { dx = ev.clientX - startX; setSwipeX(dx); };
-    const up = () => {
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      if (Math.abs(dx) > 80) { setDismissing(true); setTimeout(() => setDismissed(true), 300); }
-      else setSwipeX(0);
-    };
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-  };
+  const [naming, setNaming] = React.useState(false);
+  const [menuName, setMenuName] = React.useState('');
+  const NAME_LIMIT = 30;
+
+  const pickedFoodIds = pickedPlate ? [...new Set(pickedPlate.items.map(it => it.id))] : [];
+  const [firstTries, setFirstTries] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('pyp_child_first_tries') || '[]'); } catch { return []; }
+  });
+  React.useEffect(() => {
+    if (!pickedPlate || pickedFoodIds.length === 0) return;
+    const knownIds = new Set(firstTries.map(e => e.foodId));
+    const additions = pickedFoodIds.filter(id => !knownIds.has(id)).map(id => ({ foodId: id, timestamp: pickedPlate.submittedAt || Date.now() }));
+    if (!additions.length) return;
+    const updated = [...firstTries, ...additions];
+    localStorage.setItem('pyp_child_first_tries', JSON.stringify(updated));
+    setFirstTries(updated);
+  }, [pickedPlate]);
 
   if (!pickedPlate) {
     return (
@@ -1078,30 +1475,41 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
         <CareStatusBar />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '0 40px', textAlign: 'center' }}>
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke={CARE_COLORS.line} strokeWidth="2" strokeLinecap="round"><circle cx="20" cy="20" r="15"/><path d="M20 13v7l4 4"/></svg>
-          <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, color: CARE_COLORS.muted, lineHeight: 1.3 }}>Waiting for {childName} to pick her plate.</div>
+          <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, color: CARE_COLORS.muted, lineHeight: 1.3 }}>Waiting for {childName || 'your child'} to pick their plate.</div>
           <div style={{ fontFamily: careFont, fontSize: 14, color: CARE_COLORS.muted, lineHeight: 1.5 }}>This is where you'll be able to track your child's choices.</div>
         </div>
       </div>
     );
   }
 
-  const items     = pickedPlate.items;
-  const plateType = pickedPlate.plateType || 'basic';
-  const foodIds   = [...new Set(items.map(it => it.id))];
+  const items        = pickedPlate.items;
+  const plateType    = pickedPlate.plateType || 'basic';
+  const foodIds      = sentMenuItems.length > 0 ? [...new Set(sentMenuItems)] : pickedFoodIds;
   const plateLabel = { basic: 'Basic round plate', divided: 'Divided plate', rainbow: 'Rainbow plate', 'one-new-thing': 'One new thing', snack: 'Snack plate' }[plateType] || 'Round plate';
   const timeLabel = pickedPlate.submittedAt
     ? new Date(pickedPlate.submittedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : null;
 
-  const historicalFoods = new Set(SAVED_MENUS_DATA.flatMap(m => m.ids));
-  const familiarFoods = foodIds.filter(id => historicalFoods.has(id));
-  const newFoods = foodIds.filter(id => !historicalFoods.has(id));
+  const historicalFoods = new Set(savedMenus.flatMap(m => m.ids));
+  const familiarFoods = pickedFoodIds.filter(id => historicalFoods.has(id));
+  const newFoods = pickedFoodIds.filter(id => !historicalFoods.has(id));
   const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
 
+  const relativeTime = ts => {
+    const days = Math.floor((Date.now() - ts) / 86400000);
+    if (days === 0) return 'today';
+    if (days === 1) return 'yesterday';
+    if (days < 7) return `${days} days ago`;
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? 'one week ago' : `${weeks} weeks ago`;
+  };
+  const thisWeekCount = firstTries.filter(e => Date.now() - e.timestamp < 7 * 86400000).length;
+  const mostRecentEntry = firstTries.length ? firstTries.reduce((a, b) => a.timestamp > b.timestamp ? a : b) : null;
+
   let headline, subline, insightTag;
-  if (SAVED_MENUS_DATA.length === 0) {
-    headline = `${childName} built her first plate.`;
-    subline = `${foodIds.length} ${foodIds.length === 1 ? 'food' : 'foods'} chosen.`;
+  if (savedMenus.length === 0) {
+    headline = `${childName || 'Your child'} built their first plate.`;
+    subline = `${pickedFoodIds.length} ${pickedFoodIds.length === 1 ? 'food' : 'foods'} chosen.`;
     insightTag = 'First plate';
   } else if (newFoods.length > 0 && familiarFoods.length > 0) {
     headline = `${familiarFoods.length} familiar, ${newFoods.length} new.`;
@@ -1112,8 +1520,8 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
     subline = `First time with ${nameList(newFoods)}.`;
     insightTag = newFoods.length === 1 ? '1 new food' : `${newFoods.length} new foods`;
   } else {
-    headline = `${childName} chose familiar foods today.`;
-    subline = `${familiarFoods.length} ${familiarFoods.length === 1 ? 'food' : 'foods'} from her usual picks.`;
+    headline = `${childName || 'Your child'} chose familiar foods today.`;
+    subline = `${familiarFoods.length} ${familiarFoods.length === 1 ? 'food' : 'foods'} from their usual picks.`;
     insightTag = null;
   }
 
@@ -1121,27 +1529,12 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <CareStatusBar />
       <div style={{ flex: 1, overflow: 'auto', padding: '6px 20px 120px', fontFamily: careFont }}>
-        <style>{`@keyframes notifSlide { from { transform: translateY(-20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`}</style>
-        {!dismissed && <div onPointerDown={handleSwipe} style={{ marginTop: 4, padding: '12px 14px', background: '#fff', borderRadius: 16, border: `1px solid ${CARE_COLORS.lineSoft}`, boxShadow: '0 4px 16px rgba(40,30,20,.06)', animation: 'notifSlide .45s cubic-bezier(.2,.9,.3,1)', cursor: 'grab', transform: dismissing ? `translateX(${swipeX >= 0 ? '120%' : '-120%'})` : `translateX(${swipeX}px)`, transition: (dismissing || swipeX === 0) ? 'transform .3s ease, opacity .3s' : 'none', opacity: dismissing ? 0 : 1 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 7, background: `radial-gradient(circle at 30% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 2 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink }}>Pick Your Plate</span>
-                <span style={{ fontSize: 11, color: CARE_COLORS.muted }}>{timeLabel || 'now'}</span>
-              </div>
-              <div style={{ fontSize: 14, color: CARE_COLORS.ink, fontWeight: 600 }}>{childName} built her plate.</div>
-              <div style={{ fontSize: 13, color: CARE_COLORS.mutedStrong, marginTop: 1, lineHeight: 1.35 }}>{foodIds.length} {foodIds.length === 1 ? 'food' : 'foods'} chosen.</div>
-            </div>
-          </div>
-        </div>}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 12 }}>
           <PlateHero size={80} />
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, lineHeight: 1.15 }}>{headline}</div>
             <div style={{ fontSize: 14, color: CARE_COLORS.muted, marginTop: 4 }}>{subline}</div>
             {timeLabel && <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginTop: 5, fontFamily: careFont }}>Submitted at {timeLabel}</div>}
-            {insightTag && <div style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700, letterSpacing: .4, textTransform: 'uppercase', color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, padding: '3px 10px', borderRadius: 899 }}>{insightTag}</div>}
           </div>
         </div>
         <div style={{ marginTop: 22, padding: 24, background: '#fff', borderRadius: 20, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -1156,7 +1549,7 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
           </div>
           <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, letterSpacing: .6, textTransform: 'uppercase', marginTop: 18 }}>{plateLabel}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 10 }}>
-            {foodIds.map(id => <span key={id} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink, padding: '4px 10px', borderRadius: 899, background: CARE_COLORS.surface }}>{FOOD_CATALOG[id].name}</span>)}
+            {pickedFoodIds.map(id => <span key={id} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink, padding: '4px 10px', borderRadius: 899, background: CARE_COLORS.surface }}>{FOOD_CATALOG[id]?.name}</span>)}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: CARE_COLORS.sageSoft, borderRadius: 12, marginTop: 4 }}>
@@ -1169,11 +1562,69 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
               : "Staying with familiar foods is totally valid. Consistency builds trust over time."}
           </p>
         </div>
-        <button onClick={() => { if (!saved) { setSaved(true); onSaveMenu && onSaveMenu({ name: `${childName}'s plate`, meal: plateLabel, ids: foodIds }); } }} style={{ width: '100%', marginTop: 8, border: 'none', padding: '13px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 14, fontWeight: 600, cursor: saved ? 'default' : 'pointer', transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
-          {saved
-            ? <><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 3"/></svg>Saved</>
-            : 'Save menu for future'}
-        </button>
+        {pickedFoodIds.length > 0 && (() => {
+          const allChildIds = [...pickedFoodIds, ...savedMenus.flatMap(m => m.childIds || [])];
+          const total = allChildIds.length;
+          const counts = {};
+          allChildIds.forEach(id => { const meta = FOOD_META[id]; if (meta) meta.textures.forEach(t => { counts[t] = (counts[t]||0)+1; }); });
+          const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+          if (!entries.length) return null;
+          return (
+            <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 12, fontFamily: careFont }}>Texture patterns · child selections</div>
+              {entries.map(([texture, count]) => (
+                <div key={texture} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 68, fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, fontFamily: careFont, textTransform: 'capitalize', flexShrink: 0 }}>{texture}</div>
+                  <div style={{ flex: 1, height: 6, background: CARE_COLORS.lineSoft, borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.round((count/total)*100)}%`, height: '100%', background: CARE_COLORS.sageDeep, borderRadius: 3 }} />
+                  </div>
+                  <div style={{ width: 24, fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+        <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont }}>First tries</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont, letterSpacing: -.5, lineHeight: 1 }}>{firstTries.length}</span>
+            <span style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>since {childName || 'they'} started</span>
+          </div>
+          {thisWeekCount > 0 && (
+            <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, marginTop: 4 }}>
+              <span style={{ fontWeight: 600, color: CARE_COLORS.sageDeep }}>{thisWeekCount}</span> this week
+            </div>
+          )}
+          {mostRecentEntry && FOOD_CATALOG[mostRecentEntry.foodId] && (
+            <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              Most recent: <span style={{ fontWeight: 600, color: CARE_COLORS.ink }}>{FOOD_CATALOG[mostRecentEntry.foodId].name}</span> · {relativeTime(mostRecentEntry.timestamp)}
+            </div>
+          )}
+        </div>
+        {saved ? (
+          <div style={{ width: '100%', marginTop: 8, padding: '13px', borderRadius: 12, background: '#8BBF6A', color: '#fbf6ea', fontFamily: careFont, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 3"/></svg>Saved as "{menuName}"
+          </div>
+        ) : naming ? (
+          <div style={{ marginTop: 8, background: '#fff', border: `1px solid ${CARE_COLORS.line}`, borderRadius: 12, padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink }}>Name this menu</span>
+              <span style={{ fontFamily: careFont, fontSize: 12, color: menuName.length >= NAME_LIMIT ? '#e05' : CARE_COLORS.muted }}>{menuName.length}/{NAME_LIMIT}</span>
+            </div>
+            <input
+              autoFocus
+              value={menuName}
+              onChange={e => setMenuName(e.target.value.slice(0, NAME_LIMIT))}
+              onKeyDown={e => { if (e.key === 'Enter' && menuName.trim()) { setSaved(true); setNaming(false); onSaveMenu && onSaveMenu({ name: menuName.trim(), meal: sentMealLabel, ids: foodIds, childIds: pickedFoodIds }); } if (e.key === 'Escape') setNaming(false); }}
+              placeholder={`${childName ? `${childName}'s ` : ''}${sentMealLabel}`}
+              style={{ border: `1px solid ${CARE_COLORS.line}`, borderRadius: 8, padding: '10px 12px', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink, outline: 'none', width: '100%', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setNaming(false)} style={{ flex: 1, border: `1px solid ${CARE_COLORS.line}`, padding: '10px', borderRadius: 10, background: 'none', fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.muted, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { const n = menuName.trim() || `${childName ? `${childName}'s ` : ''}${sentMealLabel}`; setMenuName(n); setSaved(true); setNaming(false); onSaveMenu && onSaveMenu({ name: n, meal: sentMealLabel, ids: foodIds, childIds: pickedFoodIds }); }} style={{ flex: 2, border: 'none', padding: '10px', borderRadius: 10, background: CARE_COLORS.sageDeep, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: '#fbf6ea', cursor: 'pointer' }}>Save</button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -1182,16 +1633,19 @@ function CareNotification({ childName = 'Mira', pickedPlate, onSaveMenu }) {
 const SAVED_MENUS_DATA = [];
 
 const CATALOG_CATS = [
-  { label: 'Proteins',        ids: ['chicken', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'scrambledegg', 'butterchicken', 'dal'] },
-  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'corn', 'peas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado'] },
-  { label: 'Fruit',           ids: ['apple', 'grapes', 'orange', 'banana', 'strawberry', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'raspberries'] },
-  { label: 'Grains & Starch', ids: ['pasta', 'rice', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'mashedpotato', 'frenchtoast', 'tatertots', 'lasagna', 'garlicbread', 'ramen', 'eggroll', 'tacos', 'burrito', 'naan', 'samosa'] },
-  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'applesauce', 'popcorn', 'pretzel', 'granola', 'chocolatemilk'] },
+  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole'] },
+  { label: 'Fruit',           ids: ['apple', 'applesauce', 'grapes', 'orange', 'banana', 'strawberry', 'raspberries', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'cantaloupe', 'honeydew', 'mandarin'] },
+  { label: 'Grains & Starch', ids: ['pasta', 'rice', 'fries', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'bagel', 'cinnamontoast', 'roll', 'spaghettios', 'grahams', 'mashedpotato', 'frenchtoast', 'tatertots', 'garlicbread', 'naan'] },
+  { label: "Kid's Favorites", ids: ['mac', 'pizza', 'grilledcheese', 'quesadilla', 'pbj', 'friedrice', 'spagmeatballs', 'chickennoodlesoup', 'eggsandwich', 'chickenrice', 'turkeysandwich', 'hamsandwich', 'lasagna', 'ramen', 'eggroll', 'tacos', 'burrito', 'samosa'] },
+  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'popcorn', 'pretzel', 'granola', 'greekyogurt', 'icecream', 'applejuice', 'oj', 'creamcheese', 'nutella', 'pumpkinseeds', 'caprisun', 'hotchocolate', 'chocolatemilk'] },
+  { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake'] },
 ];
 
-function CareLibrary({ childName = 'Mira', savedMenus = [], kitchenIds = [], onAddToKitchen, onAddToMenu, onDone }) {
+function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddToKitchen, onAddToMenu, onDone }) {
   const [kitchenFoods, setKitchenFoods] = React.useState(() => [...kitchenIds]);
   const [query, setQuery] = React.useState('');
+  const [openStoreCats, setOpenStoreCats] = React.useState(() => new Set(CATALOG_CATS.map(c => c.label)));
   const [textureFilter, setTextureFilter] = React.useState(null);
   const [tempFilter, setTempFilter] = React.useState(null);
   const [typeFilter, setTypeFilter] = React.useState(null);
@@ -1209,7 +1663,7 @@ function CareLibrary({ childName = 'Mira', savedMenus = [], kitchenIds = [], onA
     return true;
   });
 
-  const allFoodIds = [...new Set([...KITCHEN[0].ids, ...CATALOG_CATS.flatMap(c => c.ids)])];
+  const allFoodIds = [...new Set([...KITCHEN.flatMap(c => c.ids), ...CATALOG_CATS.flatMap(c => c.ids)])];
   const matchedFoods = filterByMeta(q ? allFoodIds.filter(id => FOOD_CATALOG[id]?.name.toLowerCase().includes(q)) : allFoodIds);
   const matchedMenus = q ? savedMenus.filter(m => m.name.toLowerCase().includes(q)) : savedMenus;
 
@@ -1228,7 +1682,7 @@ function CareLibrary({ childName = 'Mira', savedMenus = [], kitchenIds = [], onA
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <CareStatusBar />
       <div style={{ flex: 1, overflow: 'auto', padding: '12px 20px 24px', fontFamily: careFont }}>
-        <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Pantry</div>
+        <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Kitchen</div>
 
         {/* Search bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.line}`, marginBottom: 12 }}>
@@ -1281,26 +1735,69 @@ function CareLibrary({ childName = 'Mira', savedMenus = [], kitchenIds = [], onA
           </>
         ) : (
           <>
-            <div style={{ fontSize: 13, color: CARE_COLORS.muted, marginBottom: 18 }}>Tap to add or remove items from your kitchen</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>Tap to add or remove from your kitchen</div>
+              <div onClick={() => setKitchenFoods([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont }}>Clear all</div>
+            </div>
 
-            {CATALOG_CATS.map((cat, i) => (
-              <div key={cat.label} style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase' }}>{cat.label}</div>
-                  {i === 0 && <div onClick={() => setKitchenFoods([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont }}>Clear all</div>}
+            {CATALOG_CATS.map(cat => {
+              const isOpen = openStoreCats.has(cat.label);
+              const toggleCat = () => setOpenStoreCats(s => { const n = new Set(s); isOpen ? n.delete(cat.label) : n.add(cat.label); return n; });
+              const inKitchenCount = cat.ids.filter(id => kitchenFoods.includes(id)).length;
+              return (
+                <div key={cat.label} style={{ marginBottom: 8, background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}`, overflow: 'hidden' }}>
+                  <div onClick={toggleCat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer' }}>
+                    <div style={{ fontFamily: careFont, fontSize: 14, fontWeight: 700, color: CARE_COLORS.ink }}>{cat.label}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {inKitchenCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, padding: '2px 8px', borderRadius: 99, fontFamily: careFont }}>{inKitchenCount} in kitchen</span>}
+                      <span style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont }}>{cat.ids.length}</span>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={CARE_COLORS.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', flexShrink: 0 }}><path d="M2 4l4 4 4-4"/></svg>
+                    </div>
+                  </div>
+                  {isOpen && (
+                    <div style={{ padding: '0 12px 12px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                      {filterByMeta(cat.ids).map(id => <FoodTile key={id} id={id} />)}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {filterByMeta(cat.ids).map(id => <FoodTile key={id} id={id} />)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
           </>
         )}
       </div>
       <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.bg }}>
         <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
-          {newlyAdded.length > 0 ? `Save · ${newlyAdded.length} new ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+          {newlyAdded.length > 0 ? `Add · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CareSetup({ onDone }) {
+  const [name, setName] = React.useState('');
+  const handle = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    localStorage.setItem('pyp_childName', trimmed);
+    onDone(trimmed);
+  };
+  return (
+    <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', background: CARE_COLORS.bg }}>
+      <CareStatusBar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 28px' }}>
+        <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: CARE_COLORS.ink, marginBottom: 32, letterSpacing: -.3, lineHeight: 1.35 }}>Enter a first name for your child:</div>
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handle()}
+          placeholder="Child's name…"
+          autoFocus
+          style={{ fontSize: 20, padding: '14px 16px', borderRadius: 12, border: `1.5px solid ${CARE_COLORS.line}`, outline: 'none', fontFamily: serifFont, color: CARE_COLORS.ink, background: '#fff', marginBottom: 16, width: '100%', boxSizing: 'border-box' }}
+        />
+        <button onClick={handle} style={{ width: '100%', padding: '16px 0', borderRadius: 12, background: name.trim() ? CARE_COLORS.sageDeep : CARE_COLORS.line, border: 'none', color: '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: name.trim() ? 'pointer' : 'default', transition: 'background .2s' }}>
+          Continue
         </button>
       </div>
     </div>
@@ -1316,15 +1813,15 @@ function CareWelcome({ onStart }) {
 
   const steps = [
     { n: 1, color: '#19324A',  text: "Setup your kitchen to match what's at home.",              scene: './step1_scene.png', right: <img src="./phone_menu.png"         style={{ height: 88, display: 'block' }} /> },
-    { n: 2, color: TEAL,  text: 'Create a menu to share with your child.',                    scene: './step2_scene.png', right: <img src="./phone_send_menu.png"    style={{ height: 88, display: 'block' }} /> },
-    { n: 3, color: GREEN, text: 'Your child selects from the menu and sends it back to you.', scene: './step3_scene.png', right: <img src="./phone_child_select.png" style={{ height: 88, display: 'block' }} /> },
+    { n: 2, color: TEAL,  text: 'Create a menu to share with your child.',                    scene: './step2_scene.png', right: <img src="./phone_menu_sent.png"    style={{ height: 88, display: 'block' }} /> },
+    { n: 3, color: GREEN, text: 'Your child selects from the menu and sends it back to you.', scene: './step3_scene.png', right: <img src="./phone_child_select.png" style={{ height: 82, display: 'block' }} /> },
     { n: 4, color: CORAL, text: 'No fuss, no muss, time to eat!',                             scene: './step4_scene.png', right: <img src="./meal_plate.png"         style={{ height: 72, display: 'block' }} /> },
   ];
 
   return (
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: BG }}>
       <CareStatusBar />
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 120px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 32px' }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginTop: 0, marginBottom: -18 }}>
@@ -1334,7 +1831,7 @@ function CareWelcome({ onStart }) {
         {/* Intro text */}
         <div style={{ textAlign: 'center', marginTop: 6, marginBottom: 14, padding: '0 8px' }}>
           <p style={{ margin: 0, fontSize: 14, color: NAVY, lineHeight: 1.65, fontFamily: careFont }}>
-            Pick Your Plate reduces mealtime anxiety for children who struggle with food. With PYP, your child makes real choices that result in real meals.
+            More choice. Less stress. Better meals.
           </p>
         </div>
 
@@ -1349,8 +1846,8 @@ function CareWelcome({ onStart }) {
         {steps.map(s => (
           <div key={s.n} style={{ background: '#fff', borderRadius: 16, marginBottom: 9, display: 'flex', alignItems: 'center', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,.06)', minHeight: 96 }}>
             {/* Left: scene image in light-blue circle bg */}
-            <div style={{ width: 96, minHeight: 96, background: '#E0F3F8', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <img src={s.scene} style={{ width: 84, display: 'block' }} />
+            <div style={{ width: 96, minHeight: 96, background: '#E0F3F8', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+              <img src={s.scene} style={{ width: 80, display: 'block' }} />
               <div style={{ position: 'absolute', top: 7, right: 7, width: 22, height: 22, borderRadius: '50%', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 12, fontFamily: 'Nunito, system-ui', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}>{s.n}</div>
             </div>
             {/* Text */}
@@ -1360,30 +1857,21 @@ function CareWelcome({ onStart }) {
           </div>
         ))}
 
-        {/* Tagline */}
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <svg width="20" height="18" viewBox="0 0 20 18" fill={TEAL}><path d="M10 17S1 11 1 5A4.5 4.5 0 0 1 10 2.5 4.5 4.5 0 0 1 19 5C19 11 10 17 10 17z"/></svg>
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#4A6080', fontWeight: 600, lineHeight: 1.65, fontFamily: careFont }}>More choice. Less stress. Better meals. Together.</p>
-        </div>
-      </div>
-
-      {/* Sticky CTA */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px 18px 40px', background: `linear-gradient(transparent, ${BG} 36%)` }}>
-        <button onClick={onStart} style={{ width: '100%', border: 'none', padding: '17px 0', borderRadius: 899, background: `linear-gradient(135deg, ${TEAL}, #2CA8B8)`, color: '#fff', fontSize: 18, fontWeight: 800, fontFamily: 'Nunito, system-ui', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 6px 22px rgba(56,185,199,.4)', letterSpacing: .3 }}>
-          Let's Get Started <span style={{ fontSize: 20, fontWeight: 300 }}>›</span>
+        <button onClick={onStart} style={{ width: '100%', marginTop: 18, border: 'none', padding: '17px 0', borderRadius: 899, background: `linear-gradient(135deg, ${TEAL}, #2CA8B8)`, color: '#fff', fontSize: 18, fontWeight: 800, fontFamily: 'Nunito, system-ui', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 6px 22px rgba(56,185,199,.4)', letterSpacing: .3 }}>
+          Get Started
         </button>
+
       </div>
     </div>
   );
 }
 
-function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap }) {
-  const [swipeX, setSwipeX] = React.useState(0);
+function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap, savedMenus = [] }) {
   const [dismissing, setDismissing] = React.useState(false);
 
   const items = pickedPlate?.items || [];
   const foodIds = [...new Set(items.map(it => it.id))];
-  const historicalFoods = new Set(SAVED_MENUS_DATA.flatMap(m => m.ids));
+  const historicalFoods = new Set(savedMenus.flatMap(m => m.ids));
   const newFoods = foodIds.filter(id => !historicalFoods.has(id));
   const familiarFoods = foodIds.filter(id => historicalFoods.has(id));
   const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
@@ -1396,33 +1884,16 @@ function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap }) {
     headline = `${newFoods.length === 1 ? 'One new food' : `${newFoods.length} new foods`} today.`;
     subline = `First time with ${nameList(newFoods)}.`;
   } else {
-    headline = `${childName} built her plate.`;
+    headline = `${childName} built their plate.`;
     subline = `${foodIds.length} ${foodIds.length === 1 ? 'food' : 'foods'} chosen.`;
   }
 
   const dismiss = () => { setDismissing(true); setTimeout(onDismiss, 320); };
 
-  const handleSwipe = (e) => {
-    const startX = e.clientX;
-    const el = e.currentTarget;
-    el.setPointerCapture(e.pointerId);
-    let dx = 0;
-    const move = (ev) => { dx = ev.clientX - startX; setSwipeX(dx); };
-    const up = () => {
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      if (Math.abs(dx) > 60) dismiss();
-      else if (Math.abs(dx) < 5) { dismiss(); onTap && onTap(); }
-      else setSwipeX(0);
-    };
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-  };
-
   return (
     <div style={{ position: 'absolute', top: 54, left: 12, right: 12, zIndex: 45, pointerEvents: 'auto' }}>
       <style>{`@keyframes notifSlideDown { from { transform: translateY(-72px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`}</style>
-      <div onPointerDown={handleSwipe} style={{ padding: '12px 14px', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(20px)', borderRadius: 16, boxShadow: '0 8px 28px rgba(40,30,20,.16)', animation: 'notifSlideDown .38s cubic-bezier(.2,.9,.3,1)', cursor: 'grab', transform: dismissing ? 'translateY(-80px)' : `translateX(${swipeX}px)`, transition: (dismissing || swipeX === 0) ? 'transform .32s ease, opacity .32s' : 'none', opacity: dismissing ? 0 : 1 }}>
+      <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(20px)', borderRadius: 16, boxShadow: '0 8px 28px rgba(40,30,20,.16)', animation: 'notifSlideDown .38s cubic-bezier(.2,.9,.3,1)', transform: dismissing ? 'translateY(-80px)' : 'none', transition: dismissing ? 'transform .32s ease, opacity .32s' : 'none', opacity: dismissing ? 0 : 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 7, background: `radial-gradient(circle at 30% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src="./pyp_logo.png" style={{ width: 26, height: 26, objectFit: 'contain' }} />
@@ -1441,81 +1912,277 @@ function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap }) {
   );
 }
 
-function CaretakerApp({ childName = 'Mira', pickedPlate, onSendMenu }) {
-  const [screen, setScreen] = React.useState('welcome');
-  const [savedMenus, setSavedMenus] = React.useState([]);
+function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, onNameChange, onReset, onNewMenu, standalone }) {
+  const [screen, setScreen] = React.useState(() => localStorage.getItem('pyp_childName') ? 'today' : 'welcome');
+  const [childName, setChildName] = React.useState(() => localStorage.getItem('pyp_childName') || propChildName);
+  const [savedMenus, setSavedMenus] = React.useState(() => { try { const s = localStorage.getItem('pyp_savedMenus'); return s ? JSON.parse(s) : []; } catch { return []; } });
   const [lastSeenPlate, setLastSeenPlate] = React.useState(null);
-  const [kitchenIds, setKitchenIds] = React.useState(() => [...new Set(KITCHEN.flatMap(c => c.ids))]);
+  const [kitchenIds, setKitchenIds] = React.useState(() => { try { const s = localStorage.getItem('pyp_kitchenIds'); const ids = s ? JSON.parse(s) : [...new Set(KITCHEN.flatMap(c => c.ids))]; return ids.filter(id => id !== 'spinach'); } catch { return [...new Set(KITCHEN.flatMap(c => c.ids))]; } });
   const [menu, setMenu] = React.useState([]);
   const [showBanner, setShowBanner] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
   const prevPlateRef = React.useRef(null);
+  const handleWelcomeStart = () => { if (localStorage.getItem('pyp_childName')) setScreen('today'); else setScreen('setup'); };
+  const handleNameSaved = (name) => { setChildName(name); setScreen('today'); onNameChange && onNameChange(name); };
 
   React.useEffect(() => {
-    if (pickedPlate && pickedPlate !== prevPlateRef.current) {
+    if (!pickedPlate) { setShowBanner(false); return; }
+    if (pickedPlate !== prevPlateRef.current) {
       prevPlateRef.current = pickedPlate;
       setShowBanner(true);
-      const t = setTimeout(() => setShowBanner(false), 15000);
+      const t = setTimeout(() => setShowBanner(false), 5500);
       return () => clearTimeout(t);
     }
   }, [pickedPlate]);
 
+  React.useEffect(() => { localStorage.setItem('pyp_kitchenIds', JSON.stringify(kitchenIds)); }, [kitchenIds]);
+  React.useEffect(() => { localStorage.setItem('pyp_savedMenus', JSON.stringify(savedMenus)); }, [savedMenus]);
+
   const addToKitchen = (ids) => setKitchenIds([...new Set(ids)]);
   const addToMenu = (ids) => setMenu(xs => [...new Set([...xs, ...ids])]);
+  const [pendingKitchenOpen, setPendingKitchenOpen] = React.useState(false);
+  const [lastSentMeal, setLastSentMeal] = React.useState('Lunch');
+  const [lastSentMenuItems, setLastSentMenuItems] = React.useState([]);
   const hasUnseenActivity = pickedPlate !== null && pickedPlate !== lastSeenPlate;
   const addSavedMenu = (entry) => setSavedMenus(xs => [...xs, { id: Date.now(), ...entry }]);
   const goToActivity = () => { setLastSeenPlate(pickedPlate); setScreen('notification'); };
-  return (
-    <CareFrame>
-      {screen === 'welcome'      && <CareWelcome      onStart={() => setScreen('today')} />}
-      {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={onSendMenu} onOpenPantry={() => setScreen('library')} pickedPlate={pickedPlate} onViewActivity={goToActivity} />}
-      {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} />}
-      {screen === 'library'      && <CareLibrary      childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} onAddToKitchen={addToKitchen} onAddToMenu={addToMenu} onDone={() => setScreen('today')} />}
-      {screen === 'settings'     && (
-        <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <CareStatusBar />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '0 40px', textAlign: 'center' }}>
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={CARE_COLORS.line} strokeWidth="1.8" strokeLinecap="round"><circle cx="18" cy="18" r="7"/><path d="M18 3v3M18 30v3M3 18h3M30 18h3M7.5 7.5l2 2M26.5 26.5l2 2M7.5 28.5l2-2M26.5 9.5l2-2"/></svg>
-            <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, color: CARE_COLORS.muted }}>Settings</div>
-            <div style={{ fontFamily: careFont, fontSize: 13, color: CARE_COLORS.muted, lineHeight: 1.5 }}>Coming soon.</div>
+  const handleInternalSendMenu = (menuData) => { setLastSentMeal(menuData.mealLabel || 'Lunch'); setLastSentMenuItems(menuData.items || []); onSendMenu(menuData); };
+  const content = (
+    <>
+      {screen === 'welcome'      && <CareWelcome      onStart={handleWelcomeStart} />}
+      {screen === 'setup'        && <CareSetup        onDone={handleNameSaved} />}
+      {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={handleInternalSendMenu} onSaveMenu={addSavedMenu} onOpenPantry={() => setScreen('library')} pickedPlate={pickedPlate} onViewActivity={goToActivity} openKitchen={pendingKitchenOpen} onKitchenOpened={() => setPendingKitchenOpen(false)} onNewMenu={onNewMenu} />}
+      {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} sentMealLabel={lastSentMeal} sentMenuItems={lastSentMenuItems} savedMenus={savedMenus} />}
+      {screen === 'library'      && <CareLibrary      childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} onAddToKitchen={addToKitchen} onAddToMenu={(ids) => setMenu(xs => [...new Set([...xs, ...ids])])} onDone={() => { setPendingKitchenOpen(true); setScreen('today'); }} />}
+      {settingsOpen && (
+        <div onClick={() => setSettingsOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', padding: '20px 24px 48px', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 20px' }} />
+            <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, marginBottom: 24 }}>Settings</div>
+            <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06)', marginBottom: 16 }}>
+              <div style={{ padding: '16px 18px' }}>
+                <div style={{ fontFamily: careFont, fontSize: 12, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 6 }}>Family Code</div>
+                <div style={{ fontFamily: careFont, fontSize: 28, fontWeight: 800, letterSpacing: 6, color: CARE_COLORS.ink }}>{localStorage.getItem('pyp_family_code') || '—'}</div>
+                <div style={{ fontFamily: careFont, fontSize: 12, color: CARE_COLORS.muted, marginTop: 4 }}>Enter this on your child's iPad to connect devices.</div>
+              </div>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
+              <button onClick={() => { setSettingsOpen(false); localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); localStorage.removeItem('pyp_kitchenIds'); localStorage.removeItem('pyp_savedMenus'); setChildName(propChildName); setSavedMenus([]); setKitchenIds([...new Set(KITCHEN.flatMap(c => c.ids))]); setScreen('welcome'); onNameChange && onNameChange(null); onReset && onReset(); }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', background: 'none', border: 'none', borderBottom: `1px solid ${CARE_COLORS.line}`, cursor: 'pointer', fontFamily: careFont, fontSize: 15, color: CARE_COLORS.ink }}>
+                <span>Reset child setup</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={CARE_COLORS.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5"/></svg>
+              </button>
+              <div style={{ padding: '14px 18px', fontFamily: careFont, fontSize: 13, color: CARE_COLORS.muted, lineHeight: 1.5 }}>Clears the saved child name and any saved menus, and returns to onboarding.</div>
+            </div>
           </div>
         </div>
       )}
-      {showBanner && screen !== 'notification' && <AppleNotifBanner childName={childName} pickedPlate={pickedPlate} onDismiss={() => setShowBanner(false)} onTap={() => { setShowBanner(false); setLastSeenPlate(pickedPlate); setScreen('notification'); }} />}
-      {screen !== 'welcome' && <CareTabBar active={screen} onTab={(tab) => { if (tab === 'notification') setLastSeenPlate(pickedPlate); setScreen(tab); }} hasActivity={hasUnseenActivity} />}
-    </CareFrame>
+      {showBanner && screen !== 'notification' && <AppleNotifBanner childName={childName} pickedPlate={pickedPlate} savedMenus={savedMenus} onDismiss={() => setShowBanner(false)} onTap={() => { setShowBanner(false); setLastSeenPlate(pickedPlate); setScreen('notification'); }} />}
+      {screen !== 'welcome' && screen !== 'setup' && <CareTabBar active={screen} onTab={(tab) => { if (tab === 'settings') { setSettingsOpen(true); return; } if (tab === 'notification') setLastSeenPlate(pickedPlate); setScreen(tab); }} hasActivity={hasUnseenActivity} />}
+    </>
   );
+  if (standalone) return (
+    <StandaloneCtx.Provider value={true}>
+      <div style={{ position: 'fixed', inset: 0, background: CARE_COLORS.bg, overflow: 'hidden' }}>{content}</div>
+    </StandaloneCtx.Provider>
+  );
+  return <CareFrame>{content}</CareFrame>;
 }
 
 Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
   </script>
 
+  <script>
+    const VAPID_PUBLIC_KEY = 'BOBAGypvM7DOFXiWNMRTl06erelXLWRTwSTpiZhndE5Q2jaxl4Rjc6VeZH1vyKEmNl76kKH4rJL0PdHX0iPUJXs';
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+
   <script type="text/babel">
     function App() {
-      const [pickedPlate, setPickedPlate] = React.useState(() => {
-        try { return JSON.parse(localStorage.getItem('pyp_plate')); } catch { return null; }
-      });
-      const [sentMenu, setSentMenu] = React.useState(() => {
-        try { return JSON.parse(localStorage.getItem('pyp_menu')); } catch { return null; }
-      });
-      const handleSendMenu = (menu) => {
-        localStorage.setItem('pyp_menu', JSON.stringify(menu));
-        localStorage.removeItem('pyp_plate');
-        setSentMenu(menu);
-        setPickedPlate(null);
+      const urlRole = new URLSearchParams(window.location.search).get('role'); // 'child' | 'caretaker' | null
+      const isTouchDevice = navigator.maxTouchPoints > 0;
+      const isPhone  = urlRole ? urlRole === 'caretaker' : window.innerWidth < 600;
+      const isTablet = urlRole ? urlRole === 'child'     : isTouchDevice && window.innerWidth >= 600 && window.innerWidth < 1400;
+      const isMobile = urlRole ? !!urlRole               : isPhone || isTablet;
+      const [pickedPlate, setPickedPlate] = React.useState(null);
+      const [sentMenu, setSentMenu] = React.useState(null);
+      const [childName, setChildName] = React.useState(() => isTablet ? '' : (localStorage.getItem('pyp_childName') || ''));
+      const [resetKey, setResetKey] = React.useState(0);
+      const [familyCode, setFamilyCode] = React.useState(() => localStorage.getItem('pyp_family_code') || null);
+      const [codeInput, setCodeInput] = React.useState('');
+      const [childPushSub, setChildPushSub] = React.useState(null);
+
+      // Parent: generate family code server-side on first use
+      React.useEffect(() => {
+        if (isTablet || familyCode) return;
+        __getToken().then(token =>
+          fetch('/api/create-session', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(({ code }) => { if (code) { localStorage.setItem('pyp_family_code', code); setFamilyCode(code); } })
+        ).catch(() => {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          const code = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => chars[b % chars.length]).join('');
+          localStorage.setItem('pyp_family_code', code); setFamilyCode(code);
+        });
+      }, []);
+
+      // Tablet: subscribe to Firestore for menu/reset; announce presence on connect
+      React.useEffect(() => {
+        if (!isTablet || !familyCode || !window.__db) return;
+        setTimeout(() => window.__db.collection('sessions').doc(familyCode).set({ childReady: true, childReadyAt: new Date() }, { merge: true }).catch(() => {}), 800);
+        const unsub = window.__db.collection('sessions').doc(familyCode).onSnapshot(doc => {
+          if (!doc.exists) { setSentMenu(null); return; }
+          const d = doc.data();
+          if (d.childName) { setChildName(d.childName); localStorage.setItem('pyp_childName', d.childName); }
+          if (d.status === 'pending' && d.menu) { setSentMenu(d.menu); }
+          if (d.status === 'reset') { localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); setChildName(''); setSentMenu(null); setResetKey(k => k + 1); }
+        }, () => {});
+        return unsub;
+      }, [familyCode]);
+
+      // Tablet: request push permission and register subscription
+      React.useEffect(() => {
+        if (!isTablet || !familyCode || !window.__db) return;
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        async function setupPush() {
+          try {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') return;
+            const reg = await navigator.serviceWorker.ready;
+            const existing = await reg.pushManager.getSubscription();
+            const sub = existing || await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            });
+            window.__db.collection('sessions').doc(familyCode).set(
+              { pushSubscription: JSON.parse(JSON.stringify(sub)) },
+              { merge: true }
+            ).catch(() => {});
+          } catch (e) {}
+        }
+        setupPush();
+      }, [familyCode]);
+
+      // Parent: subscribe to Firestore for child submission and tablet-ready signals
+      React.useEffect(() => {
+        if (isTablet || !familyCode || !window.__db) return;
+        let initialLoad = true;
+        const unsub = window.__db.collection('sessions').doc(familyCode).onSnapshot(doc => {
+          const isFirst = initialLoad;
+          if (initialLoad) initialLoad = false;
+          if (!doc.exists) return;
+          const d = doc.data();
+          if (d.pushSubscription) setChildPushSub(d.pushSubscription);
+          if (d.status === 'submitted' && d.selection) {
+            const isRecent = d.submittedAt?.toDate ? Date.now() - d.submittedAt.toDate().getTime() < 2 * 60 * 60 * 1000 : true;
+            if (!isFirst || isRecent) { setPickedPlate(d.selection); localStorage.removeItem('pyp_lastMenu'); }
+          }
+          // always process childReady — including on first snapshot so tablet reconnects are never missed
+          if (d.childReady) {
+            const name = localStorage.getItem('pyp_childName') || '';
+            const raw = localStorage.getItem('pyp_lastMenu');
+            const update = { childReady: false };
+            if (raw) {
+              try {
+                const stored = JSON.parse(raw);
+                if (stored.sentAt && Date.now() - stored.sentAt < 2 * 60 * 60 * 1000) {
+                  Object.assign(update, { menu: stored.menu, childName: name, status: 'pending', sentAt: new Date() });
+                } else { localStorage.removeItem('pyp_lastMenu'); update.childName = name; }
+              } catch { localStorage.removeItem('pyp_lastMenu'); update.childName = name; }
+            } else { update.childName = name; }
+            window.__db.collection('sessions').doc(familyCode).set(update, { merge: true }).catch(() => {});
+          }
+        }, () => {});
+        return unsub;
+      }, [familyCode]);
+
+      const handleSendMenu = (menuData) => {
+        const items = Array.isArray(menuData) ? menuData : (menuData.items || []);
+        const name = localStorage.getItem('pyp_childName') || '';
+        setChildName(name); setSentMenu(items); setPickedPlate(null);
+        localStorage.setItem('pyp_lastMenu', JSON.stringify({ menu: items, sentAt: Date.now() }));
+        if (window.__db && familyCode) {
+          window.__db.collection('sessions').doc(familyCode).set({ menu: items, childName: name, sentAt: new Date(), status: 'pending', deleteAt: new Date(Date.now() + 86400000) }).catch(() => {});
+        }
+        if (childPushSub) {
+          __getToken().then(token =>
+            fetch('/api/send-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({
+                subscription: childPushSub,
+                familyCode,
+                payload: {
+                  title: 'Pick Your Plate',
+                  body: name ? `${name}, your menu is ready! Go pick your plate.` : "Your menu is ready — go pick your plate!",
+                  url: '/prototype.html',
+                },
+              }),
+            })
+          ).catch(() => {});
+        }
       };
       const handlePickedPlate = (plate) => {
-        localStorage.setItem('pyp_plate', JSON.stringify(plate));
         setPickedPlate(plate);
+        if (window.__db && familyCode) {
+          window.__db.collection('sessions').doc(familyCode).set({ status: 'submitted', selection: plate, submittedAt: new Date(), deleteAt: new Date(Date.now() + 86400000) }, { merge: true }).catch(() => {});
+        }
       };
+      const handleReset = () => {
+        setChildName(''); setSentMenu(null); setPickedPlate(null); setResetKey(k => k + 1);
+        if (window.__db && familyCode) window.__db.collection('sessions').doc(familyCode).set({ status: 'reset', deleteAt: new Date(Date.now() + 3600000) }).catch(() => {});
+      };
+      const handleNewMenu = () => {
+        setPickedPlate(null);
+        if (window.__db && familyCode) window.__db.collection('sessions').doc(familyCode).delete().catch(() => {});
+      };
+      const handleNameChange = (name) => {
+        setChildName(name || '');
+        if (window.__db && familyCode) window.__db.collection('sessions').doc(familyCode).set({ childName: name || '', status: 'idle', deleteAt: new Date(Date.now() + 86400000) }, { merge: true }).catch(() => {});
+      };
+
+      if (isMobile) {
+        if (isTablet) {
+          if (!familyCode) return (
+            <div style={{ position: 'fixed', inset: 0, background: '#f6efe2', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+              <div style={{ textAlign: 'center', maxWidth: 340, width: '100%' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🍽️</div>
+                <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 28, fontWeight: 500, color: '#2a241c', marginBottom: 8 }}>Enter family code</div>
+                <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 15, color: '#8a7c66', marginBottom: 28, lineHeight: 1.5 }}>Ask the parent to open Settings in their app to find the code.</div>
+                <input value={codeInput} onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} placeholder="ABC123" style={{ width: '100%', padding: '18px', fontSize: 26, textAlign: 'center', fontFamily: 'Nunito, system-ui', fontWeight: 700, letterSpacing: 6, borderRadius: 14, border: '2px solid #d8cfc0', outline: 'none', marginBottom: 14, background: '#fff' }} />
+                <button onClick={() => { const c = codeInput.trim(); if (c.length === 6) { localStorage.setItem('pyp_family_code', c); setFamilyCode(c); __getToken().then(token => fetch('/api/join-family', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ code: c }) })).catch(() => {}); } }} disabled={codeInput.length < 6} style={{ width: '100%', padding: '16px', background: codeInput.length === 6 ? '#4a7c59' : '#c0b8a8', color: '#fff', border: 'none', borderRadius: 14, fontFamily: 'Nunito, system-ui', fontSize: 17, fontWeight: 700, cursor: codeInput.length === 6 ? 'pointer' : 'default', transition: 'background .15s' }}>Connect</button>
+              </div>
+            </div>
+          );
+          const scale = Math.min(window.innerWidth / 1180, window.innerHeight / 820);
+          return (
+            <div style={{ position: 'fixed', inset: 0, background: '#f6efe2', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+                <ChildApp key={resetKey} childName={childName} onSubmit={handlePickedPlate} sentMenu={sentMenu} onResetCode={() => { localStorage.removeItem('pyp_family_code'); setFamilyCode(null); }} />
+              </div>
+            </div>
+          );
+        }
+
+        return <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} standalone />;
+      }
+
       return (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 60, flexWrap: 'wrap', justifyContent: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Caretaker · iPhone</div>
-            <CaretakerApp childName="Mira" pickedPlate={pickedPlate} onSendMenu={handleSendMenu} />
+            <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Child · iPad</div>
-            <ChildApp childName="Mira" onSubmit={handlePickedPlate} sentMenu={sentMenu} />
+            <ChildApp key={resetKey} childName={childName} onSubmit={handlePickedPlate} sentMenu={sentMenu} />
           </div>
         </div>
       );
