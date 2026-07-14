@@ -189,6 +189,15 @@ const FOOD_CATALOG = {
   burrito:         { name: 'Burrito',               color: '#e8d0a0', accent: '#a08040', shape: 'roll'     },
   samosa:          { name: 'Samosa',                color: '#d4a850', accent: '#8a6020', shape: 'triangle' },
   naan:            { name: 'Naan',                  color: '#e8c888', accent: '#a07830', shape: 'oval'     },
+  // Added foods from Nano B batch
+  corn:            { name: 'Corn',                  color: '#f0cc4a', accent: '#a47818', shape: 'dots'     },
+  salad:           { name: 'Salad',                 color: '#7aba5a', accent: '#2e6018', shape: 'leaf'     },
+  chickensandwich: { name: 'Chicken sandwich',      color: '#e8c070', accent: '#9a7020', shape: 'square'   },
+  chili:           { name: 'Chili',                 color: '#c43020', accent: '#7a1008', shape: 'bowl'     },
+  fishsandwich:    { name: 'Fish sandwich',         color: '#e8d0a0', accent: '#a09050', shape: 'square'   },
+  milkshake:       { name: 'Milkshake',             color: '#f8f0e8', accent: '#d0b0a0', shape: 'glass'    },
+  soda:            { name: 'Soda',                  color: '#3a1808', accent: '#c89058', shape: 'glass'    },
+  onionrings:      { name: 'Onion rings',           color: '#d4a860', accent: '#8a5820', shape: 'ring'     },
 };
 
 function FoodImage({ id, size = 80 }) {
@@ -341,6 +350,14 @@ const FOOD_META = {
   burrito:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
   samosa:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
   naan:             { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
+  corn:             { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'veggies' },
+  salad:            { textures: ['crunchy','crisp'],   temps: ['cold'],        type: 'veggies' },
+  chickensandwich:  { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
+  chili:            { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
+  fishsandwich:     { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
+  milkshake:        { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats'  },
+  soda:             { textures: ['smooth'],            temps: ['cold'],        type: 'treats'  },
+  onionrings:       { textures: ['crunchy'],           temps: ['hot'],         type: 'veggies' },
 };
 Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
   </script>
@@ -1633,12 +1650,12 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
 const SAVED_MENUS_DATA = [];
 
 const CATALOG_CATS = [
-  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew'] },
-  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole'] },
+  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew', 'chickensandwich', 'fishsandwich', 'chili'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole', 'corn', 'salad', 'onionrings'] },
   { label: 'Fruit',           ids: ['apple', 'applesauce', 'grapes', 'orange', 'banana', 'strawberry', 'raspberries', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'cantaloupe', 'honeydew', 'mandarin'] },
   { label: 'Grains & Starch', ids: ['pasta', 'rice', 'fries', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'bagel', 'cinnamontoast', 'roll', 'spaghettios', 'grahams', 'mashedpotato', 'frenchtoast', 'tatertots', 'garlicbread', 'naan'] },
   { label: "Kid's Favorites", ids: ['mac', 'pizza', 'grilledcheese', 'quesadilla', 'pbj', 'friedrice', 'spagmeatballs', 'chickennoodlesoup', 'eggsandwich', 'chickenrice', 'turkeysandwich', 'hamsandwich', 'lasagna', 'ramen', 'eggroll', 'tacos', 'burrito', 'samosa'] },
-  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'popcorn', 'pretzel', 'granola', 'greekyogurt', 'icecream', 'applejuice', 'oj', 'creamcheese', 'nutella', 'pumpkinseeds', 'caprisun', 'hotchocolate', 'chocolatemilk'] },
+  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'popcorn', 'pretzel', 'granola', 'greekyogurt', 'icecream', 'applejuice', 'oj', 'creamcheese', 'nutella', 'pumpkinseeds', 'caprisun', 'hotchocolate', 'chocolatemilk', 'milkshake', 'soda'] },
   { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake'] },
 ];
 
