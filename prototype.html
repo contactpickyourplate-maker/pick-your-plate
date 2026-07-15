@@ -1806,7 +1806,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
       </div>
       <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.bg }}>
         <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
-          {newlyAdded.length > 0 ? `Add · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Back to menu'}
+          {newlyAdded.length > 0 ? `Add · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Done'}
         </button>
       </div>
     </div>
