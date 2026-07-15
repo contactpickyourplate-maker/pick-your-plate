@@ -192,6 +192,7 @@ const FOOD_CATALOG = {
   // Added foods from Nano B batch
   corn:            { name: 'Corn',                  color: '#f0cc4a', accent: '#a47818', shape: 'dots'     },
   salad:           { name: 'Salad',                 color: '#7aba5a', accent: '#2e6018', shape: 'leaf'     },
+  friedchicken:    { name: 'Fried chicken',          color: '#d4892a', accent: '#8a4c10', shape: 'nugget'   },
   chickensandwich: { name: 'Chicken sandwich',      color: '#e8c070', accent: '#9a7020', shape: 'square'   },
   chili:           { name: 'Chili',                 color: '#c43020', accent: '#7a1008', shape: 'bowl'     },
   fishsandwich:    { name: 'Fish sandwich',         color: '#e8d0a0', accent: '#a09050', shape: 'square'   },
@@ -363,6 +364,7 @@ const FOOD_META = {
   naan:             { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
   corn:             { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'veggies' },
   salad:            { textures: ['crunchy','crisp'],   temps: ['cold'],        type: 'veggies' },
+  friedchicken:     { textures: ['crispy'],             temps: ['hot'],         type: 'protein' },
   chickensandwich:  { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
   chili:            { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
   fishsandwich:     { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
@@ -1671,7 +1673,7 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
 const SAVED_MENUS_DATA = [];
 
 const CATALOG_CATS = [
-  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew', 'chickensandwich', 'fishsandwich', 'chili', 'salmon', 'meatballs'] },
+  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew', 'chickensandwich', 'fishsandwich', 'chili', 'salmon', 'meatballs', 'friedchicken'] },
   { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole', 'corn', 'salad', 'onionrings', 'pickle'] },
   { label: 'Fruit',           ids: ['apple', 'applesauce', 'grapes', 'orange', 'banana', 'strawberry', 'raspberries', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'cantaloupe', 'honeydew', 'mandarin'] },
   { label: 'Grains & Starch', ids: ['pasta', 'rice', 'fries', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'bagel', 'cinnamontoast', 'roll', 'spaghettios', 'grahams', 'mashedpotato', 'frenchtoast', 'tatertots', 'garlicbread', 'naan'] },
