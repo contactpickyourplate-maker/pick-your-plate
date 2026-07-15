@@ -198,6 +198,17 @@ const FOOD_CATALOG = {
   milkshake:       { name: 'Milkshake',             color: '#f8f0e8', accent: '#d0b0a0', shape: 'glass'    },
   soda:            { name: 'Soda',                  color: '#3a1808', accent: '#c89058', shape: 'glass'    },
   onionrings:      { name: 'Onion rings',           color: '#d4a860', accent: '#8a5820', shape: 'ring'     },
+  // Added from safe-food list review
+  pickle:           { name: 'Pickle',                color: '#8aa848', accent: '#3a5818', shape: 'oval'    },
+  salmon:           { name: 'Salmon',                color: '#e8946a', accent: '#a85030', shape: 'oval'    },
+  meatballs:        { name: 'Meatballs',             color: '#8a4828', accent: '#4a2010', shape: 'ovals'   },
+  ricekrispietreat: { name: 'Rice Krispie treat',    color: '#f0e0a0', accent: '#a08838', shape: 'square'  },
+  instantbreakfast: { name: 'Instant breakfast shake', color: '#e8d0a8', accent: '#a08050', shape: 'glass' },
+  candybar:         { name: 'Candy bar',             color: '#5a3018', accent: '#c89058', shape: 'bar'     },
+  water:            { name: 'Water',                 color: '#cfe8f0', accent: '#5a98a8', shape: 'glass'   },
+  butter:           { name: 'Butter',                color: '#f0d878', accent: '#c0a028', shape: 'square'  },
+  broth:            { name: 'Broth',                 color: '#e8c878', accent: '#9a7020', shape: 'bowl'    },
+  plainchicken:     { name: 'Chicken breast',        color: '#e6c28a', accent: '#a06c2a', shape: 'oval'    },
 };
 
 function FoodImage({ id, size = 80 }) {
@@ -358,6 +369,16 @@ const FOOD_META = {
   milkshake:        { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats'  },
   soda:             { textures: ['smooth'],            temps: ['cold'],        type: 'treats'  },
   onionrings:       { textures: ['crunchy'],           temps: ['hot'],         type: 'veggies' },
+  pickle:           { textures: ['crunchy'],            temps: ['cold'],        type: 'veggies' },
+  salmon:           { textures: ['flaky','soft'],       temps: ['hot'],         type: 'protein' },
+  meatballs:        { textures: ['soft','chewy'],       temps: ['hot'],         type: 'protein' },
+  ricekrispietreat: { textures: ['crunchy','chewy','sticky'], temps: ['room'],  type: 'treats'  },
+  instantbreakfast: { textures: ['smooth'],             temps: ['cold'],        type: 'dairy'   },
+  candybar:         { textures: ['chewy','crunchy'],    temps: ['room'],        type: 'treats'  },
+  water:            { textures: ['smooth'],             temps: ['cold','room'], type: 'dairy'   },
+  butter:           { textures: ['creamy','smooth'],    temps: ['room'],        type: 'dairy'   },
+  broth:            { textures: ['smooth'],             temps: ['hot'],         type: 'protein' },
+  plainchicken:     { textures: ['soft','tender'],      temps: ['hot'],         type: 'protein' },
 };
 Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
   </script>
