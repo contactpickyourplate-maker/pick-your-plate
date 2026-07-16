@@ -1342,13 +1342,16 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
           {menu.map(id => <FoodChip key={id} id={id} onRemove={() => toggleFood(id)} />)}
           {menu.length > 0 && (
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, fontFamily: careFont, color: menu.length >= MENU_LIMIT ? '#b06a10' : CARE_COLORS.muted }}>{menu.length} / {MENU_LIMIT}</div>
+              {menu.length >= MENU_LIMIT
+                ? <div style={{ fontSize: 11, fontWeight: 800, fontFamily: careFont, color: '#fff', background: '#c0392b', padding: '3px 9px', borderRadius: 99, letterSpacing: .2, animation: 'ppFadeSlideUp .18s ease' }}>⚠ {menu.length} / {MENU_LIMIT} — Full</div>
+                : <div style={{ fontSize: 12, fontWeight: 600, fontFamily: careFont, color: CARE_COLORS.muted }}>{menu.length} / {MENU_LIMIT}</div>
+              }
               <div onClick={() => onSetMenu([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont, padding: '2px 4px' }}>Clear all</div>
             </div>
           )}
           {menuFull && (
-            <div style={{ width: '100%', padding: '8px 12px', background: '#fef3cd', border: '1px solid #e8c040', borderRadius: 8, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: '#7a5a10', textAlign: 'center', animation: 'ppFadeSlideUp .18s ease' }}>
-              Menu is full — remove something to add more
+            <div style={{ width: '100%', padding: '10px 14px', background: '#c0392b', borderRadius: 10, fontFamily: careFont, fontSize: 13, fontWeight: 700, color: '#fff', textAlign: 'center', animation: 'ppFadeSlideUp .18s ease', boxShadow: '0 4px 14px rgba(192,57,43,.35)' }}>
+              ⚠ Menu is full — remove a food to add more
             </div>
           )}
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 2 : 0 }}>
@@ -1434,8 +1437,8 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
         <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '82%', background: CARE_COLORS.bg, borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', animation: 'sheetUp .25s cubic-bezier(.2,.8,.3,1)', position: 'relative' }}>
             {menuFull && (
-              <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10, background: '#1a1612', color: '#fff', borderRadius: 12, padding: '11px 16px', fontFamily: careFont, fontSize: 14, fontWeight: 600, textAlign: 'center', boxShadow: '0 4px 16px rgba(0,0,0,.25)', animation: 'ppFadeSlideUp .22s ease', pointerEvents: 'none' }}>
-                Menu is full (12 / 12) — remove something to add more
+              <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10, background: '#c0392b', color: '#fff', borderRadius: 12, padding: '11px 16px', fontFamily: careFont, fontSize: 14, fontWeight: 700, textAlign: 'center', boxShadow: '0 4px 16px rgba(192,57,43,.4)', animation: 'ppFadeSlideUp .22s ease', pointerEvents: 'none' }}>
+                ⚠ Menu is full (12 / 12) — remove a food to add more
               </div>
             )}
             <div style={{ padding: '14px 20px 0', flexShrink: 0 }}>
