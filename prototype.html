@@ -1136,7 +1136,7 @@ function CareTabBar({ active, onTab, hasActivity }) {
   const tabs = [
     { id: 'today', label: 'Menus', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/></svg> },
     { id: 'notification', label: 'Activity', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M4 8a7 7 0 0 1 14 0v5l2 2H2l2-2V8z"/><path d="M9 18a2 2 0 0 0 4 0"/></svg> },
-    { id: 'library', label: 'Kitchen', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg> },
+    { id: 'library', label: 'Store', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg> },
     { id: 'settings', label: 'Settings', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
   ];
   return (
@@ -1418,7 +1418,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
               <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 16px' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, color: CARE_COLORS.ink }}>Kitchen</div>
-                <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); onOpenPantry && onOpenPantry(); }} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep, cursor: 'pointer', fontFamily: careFont }}>Add to Kitchen</div>
+                <div onClick={() => { setKitchenOpen(false); setKitchenQuery(''); onOpenPantry && onOpenPantry(); }} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.sageDeep, cursor: 'pointer', fontFamily: careFont }}>Browse Store</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: `1px solid ${CARE_COLORS.line}`, borderRadius: 10, padding: '9px 12px', marginBottom: 14 }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><circle cx="6" cy="6" r="4.5" stroke={CARE_COLORS.muted} strokeWidth="1.5"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke={CARE_COLORS.muted} strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -1722,7 +1722,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <CareStatusBar />
       <div style={{ flex: 1, overflow: 'auto', padding: '12px 20px 24px', fontFamily: careFont }}>
-        <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Kitchen</div>
+        <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Store</div>
 
         {/* Search bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', background: '#fff', borderRadius: 12, border: `1px solid ${CARE_COLORS.line}`, marginBottom: 12 }}>
@@ -1754,7 +1754,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
                 <>
                   {inKitchen.length > 0 && (
                     <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 10, fontFamily: careFont }}>In your kitchen</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 10, fontFamily: careFont }}>Stocked</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                         {inKitchen.map(id => <FoodTile key={id} id={id} />)}
                       </div>
@@ -1762,8 +1762,8 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
                   )}
                   {notInKitchen.length > 0 && (
                     <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 6, fontFamily: careFont }}>Not in your kitchen yet</div>
-                      <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont, lineHeight: 1.4 }}>Tap to add to your kitchen — then open the Kitchen sheet to put it on today's menu.</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 6, fontFamily: careFont }}>Not yet stocked</div>
+                      <div style={{ fontSize: 12, color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont, lineHeight: 1.4 }}>Tap to stock. Foods you stock will appear in your kitchen when building menus.</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                         {notInKitchen.map(id => <FoodTile key={id} id={id} />)}
                       </div>
@@ -1776,7 +1776,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>Tap to add or remove from your kitchen</div>
+              <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>Tap to stock or unstock</div>
               <div onClick={() => setKitchenFoods([])} style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', fontFamily: careFont }}>Clear all</div>
             </div>
 
@@ -1789,7 +1789,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
                   <div onClick={toggleCat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer' }}>
                     <div style={{ fontFamily: careFont, fontSize: 14, fontWeight: 700, color: CARE_COLORS.ink }}>{cat.label}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {inKitchenCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, padding: '2px 8px', borderRadius: 99, fontFamily: careFont }}>{inKitchenCount} in kitchen</span>}
+                      {inKitchenCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, padding: '2px 8px', borderRadius: 99, fontFamily: careFont }}>{inKitchenCount} stocked</span>}
                       <span style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont }}>{cat.ids.length}</span>
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={CARE_COLORS.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', flexShrink: 0 }}><path d="M2 4l4 4 4-4"/></svg>
                     </div>
@@ -1808,7 +1808,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
       </div>
       <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.bg }}>
         <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
-          {newlyAdded.length > 0 ? `Add · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'item' : 'items'}` : 'Done'}
+          {newlyAdded.length > 0 ? `Stock · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'food' : 'foods'}` : 'Done'}
         </button>
       </div>
     </div>
