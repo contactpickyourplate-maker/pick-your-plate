@@ -1075,7 +1075,7 @@ Object.assign(window, { ChildApp, Plate, TrayCard, IPadFrame, CHILD_COLORS });
   <!-- caretaker-app.jsx -->
   <script type="text/babel">
 const CARE_COLORS = {
-  bg: '#EDEADF', card: '#ffffff', surface: '#F5F3ED',
+  bg: '#EDEADF', storeBg: '#F0E6D0', card: '#ffffff', surface: '#F5F3ED',
   ink: '#2a241c', muted: '#8a7c66', mutedStrong: '#5a4e3c',
   line: '#D8D4C8', lineSoft: '#ECEAE2',
   sage: '#A9D18E', sageDeep: '#6B9E52', sageSoft: '#E4F3DC',
@@ -1710,16 +1710,16 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
   const FoodTile = ({ id }) => {
     const on = kitchenFoods.includes(id);
     return (
-      <div onClick={() => toggle(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 4px 8px', borderRadius: 12, background: on ? '#E4F3DC' : '#fff', border: on ? '1.5px solid #A9D18E' : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
+      <div onClick={() => toggle(id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 4px 8px', borderRadius: 12, background: on ? '#FEF3D8' : '#fff', border: on ? '1.5px solid #D4A520' : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', position: 'relative', transition: 'background .15s, border-color .15s' }}>
         <FoodImage id={id} size={44} />
         <div style={{ fontSize: 11, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
-        {on && <div style={{ position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: '50%', background: '#6B9E52', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4l1.8 1.8L6.5 2"/></svg></div>}
+        {on && <div style={{ position: 'absolute', top: -6, right: -4, fontSize: 9, fontWeight: 800, background: '#C8930A', color: '#fff', padding: '2px 6px', borderRadius: 99, whiteSpace: 'nowrap', fontFamily: careFont }}>Stocked ✓</div>}
       </div>
     );
   };
 
   return (
-    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: CARE_COLORS.storeBg }}>
       <CareStatusBar />
       <div style={{ flex: 1, overflow: 'auto', padding: '12px 20px 24px', fontFamily: careFont }}>
         <div style={{ fontFamily: serifFont, fontSize: 28, fontWeight: 500, letterSpacing: -.4, color: CARE_COLORS.ink, marginBottom: 16 }}>Store</div>
@@ -1806,7 +1806,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
           </>
         )}
       </div>
-      <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.bg }}>
+      <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.storeBg }}>
         <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
           {newlyAdded.length > 0 ? `Stock · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'food' : 'foods'}` : 'Done'}
         </button>
