@@ -1257,6 +1257,23 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
   const [storeTempF, setStoreTempF] = React.useState(null);
   const [storeTypeF, setStoreTypeF] = React.useState(null);
   const closeStoreOverlay = () => { setStoreOverlayOpen(false); setStoreQuery(''); setStoreFiltersOpen(false); setStoreTextureF(null); setStoreTempF(null); setStoreTypeF(null); };
+  const [storeToast, setStoreToast] = React.useState('');
+  const [storeToastOn, setStoreToastOn] = React.useState(false);
+  const storeToastRef = React.useRef(null);
+  const showStoreToast = (msg) => { setStoreToast(msg); setStoreToastOn(true); clearTimeout(storeToastRef.current); storeToastRef.current = setTimeout(() => setStoreToastOn(false), 2200); };
+  const handleOverlayTap = (id) => {
+    const isStocked = kitchenIds.includes(id);
+    const onMenu = menu.includes(id);
+    const name = FOOD_CATALOG[id]?.name || id;
+    if (onMenu) {
+      toggleFood(id);
+      showStoreToast(`${name} off the menu — still stocked`);
+      return;
+    }
+    if (!isStocked && onStockFood) onStockFood(id);
+    toggleFood(id);
+    showStoreToast(isStocked ? `${name} → added to menu` : `${name} → kitchen + today's menu`);
+  };
   React.useEffect(() => { setPlateStatusDismissed(false); }, [pickedPlate]);
   React.useEffect(() => {
     if (saved && lastSentMenuRef.current && JSON.stringify(menu) !== JSON.stringify(lastSentMenuRef.current)) {
@@ -1520,7 +1537,10 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                 <PillFilterRows textureFilter={storeTextureF} setTextureFilter={setStoreTextureF} tempFilter={storeTempF} setTempFilter={setStoreTempF} typeFilter={storeTypeF} setTypeFilter={setStoreTypeF} />
               </div>
             )}
-            <div style={{ flex: 1, overflow: 'auto', padding: '8px 20px 80px' }}>
+            <div style={{ position: 'relative', flex: 1, overflow: 'auto', padding: '8px 20px 80px' }}>
+              {storeToastOn && (
+                <div style={{ position: 'sticky', top: 0, zIndex: 10, left: '50%', width: 'fit-content', margin: '0 auto 8px', background: CARE_COLORS.ink, color: CARE_COLORS.bg, fontFamily: careFont, fontSize: 13, fontWeight: 700, padding: '10px 16px', borderRadius: 99, whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(0,0,0,.25)', animation: 'ppFadeSlideUp .2s ease', textAlign: 'center' }}>{storeToast}</div>
+              )}
               {(() => {
                 const sq = storeQuery.trim().toLowerCase();
                 const allStoreFoods = [...new Set(CATALOG_CATS.flatMap(c => c.ids))].filter(id => FOOD_CATALOG[id]);
@@ -1539,11 +1559,15 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                     {filtered.map(id => {
                       const onMenu = menu.includes(id);
+                      const isStocked = kitchenIds.includes(id);
+                      const bg = onMenu ? '#E4F3DC' : isStocked ? '#FEF3D8' : CARE_COLORS.bg;
+                      const border = onMenu ? `1.5px solid #A9D18E` : isStocked ? '1.5px solid #D4A520' : `1px solid ${CARE_COLORS.lineSoft}`;
                       return (
-                        <div key={id} onClick={() => toggleFood(id)} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: onMenu ? '#E4F3DC' : CARE_COLORS.bg, border: onMenu ? `1.5px solid #A9D18E` : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', transition: 'background .15s, border-color .15s' }}>
+                        <div key={id} onClick={() => handleOverlayTap(id)} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: bg, border, cursor: 'pointer', transition: 'background .15s, border-color .15s' }}>
                           <FoodImage id={id} size={52} />
                           <div style={{ fontSize: 11, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
                           {onMenu && <div style={{ position: 'absolute', top: -6, right: -4, fontSize: 9, fontWeight: 800, background: CARE_COLORS.sageDeep, color: '#fff', padding: '2px 6px', borderRadius: 99, whiteSpace: 'nowrap', fontFamily: careFont }}>Added ✓</div>}
+                          {!onMenu && isStocked && <div style={{ position: 'absolute', top: -6, right: -4, fontSize: 9, fontWeight: 800, background: '#C8930A', color: '#fff', padding: '2px 6px', borderRadius: 99, whiteSpace: 'nowrap', fontFamily: careFont }}>Stocked ✓</div>}
                         </div>
                       );
                     })}
