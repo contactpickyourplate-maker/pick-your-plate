@@ -1230,7 +1230,7 @@ function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFi
   );
 }
 
-function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = [], onSetMenu, onSaved, onSendMenu, onSaveMenu, onOpenPantry, pickedPlate, onViewActivity, openKitchen, onKitchenOpened, onNewMenu }) {
+function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = [], onSetMenu, onSaved, onSendMenu, onSaveMenu, onOpenPantry, onStockFood, pickedPlate, onViewActivity, openKitchen, onKitchenOpened, onNewMenu }) {
   const [meal, setMeal] = React.useState('lunch');
   const [kitchenOpen, setKitchenOpen] = React.useState(openKitchen || false);
   React.useEffect(() => { if (openKitchen && onKitchenOpened) onKitchenOpened(); }, []);
@@ -1250,6 +1250,13 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
   const lastSentMenuRef = React.useRef(null);
   const [menuFull, setMenuFull] = React.useState(false);
   const MENU_LIMIT = 12;
+  const [storeOverlayOpen, setStoreOverlayOpen] = React.useState(false);
+  const [storeQuery, setStoreQuery] = React.useState('');
+  const [storeFiltersOpen, setStoreFiltersOpen] = React.useState(false);
+  const [storeTextureF, setStoreTextureF] = React.useState(null);
+  const [storeTempF, setStoreTempF] = React.useState(null);
+  const [storeTypeF, setStoreTypeF] = React.useState(null);
+  const closeStoreOverlay = () => { setStoreOverlayOpen(false); setStoreQuery(''); setStoreFiltersOpen(false); setStoreTextureF(null); setStoreTempF(null); setStoreTypeF(null); };
   React.useEffect(() => { setPlateStatusDismissed(false); }, [pickedPlate]);
   React.useEffect(() => {
     if (saved && lastSentMenuRef.current && JSON.stringify(menu) !== JSON.stringify(lastSentMenuRef.current)) {
@@ -1476,6 +1483,9 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                   </div>
                 );});
               })()}
+              <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); setStoreOverlayOpen(true); }} style={{ marginTop: 14, width: '100%', border: `2px dashed ${CARE_COLORS.sageDeep}`, background: CARE_COLORS.sageSoft, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontWeight: 700, fontSize: 14, borderRadius: 12, padding: '12px', cursor: 'pointer' }}>
+                + Add a food from the store
+              </button>
             </div>
             <div style={{ padding: '12px 20px 24px', flexShrink: 0 }}>
               <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); }} style={{ width: '100%', padding: '13px 0', borderRadius: 12, background: CARE_COLORS.sageDeep, border: 'none', color: '#fbf6ea', fontSize: 15, fontWeight: 600, fontFamily: careFont, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
@@ -1484,6 +1494,65 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
             </div>
           </div>
         </div>
+      )}
+
+      {/* Store overlay */}
+      {storeOverlayOpen && (
+        <>
+          <div onClick={closeStoreOverlay} style={{ position: 'absolute', inset: 0, zIndex: 45, background: 'rgba(40,30,20,.35)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '84%', zIndex: 46, background: '#fff', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', animation: 'sheetUp .3s cubic-bezier(.32,.9,.35,1)', overflow: 'hidden' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '10px auto 0', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 4px', flexShrink: 0 }}>
+              <div style={{ fontFamily: serifFont, fontSize: 20, fontWeight: 500, color: CARE_COLORS.ink }}>Store</div>
+              <button onClick={closeStoreOverlay} style={{ border: 'none', background: CARE_COLORS.sageDeep, color: '#fff', fontFamily: careFont, fontWeight: 700, fontSize: 14, padding: '7px 18px', borderRadius: 99, cursor: 'pointer' }}>Done</button>
+            </div>
+            <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, padding: '0 20px 8px', flexShrink: 0 }}>Tap a food to add it to your kitchen and today's menu.</div>
+            <div style={{ display: 'flex', gap: 8, padding: '0 20px 6px', flexShrink: 0 }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: CARE_COLORS.bg, border: `1px solid ${CARE_COLORS.line}`, borderRadius: 10, padding: '9px 12px' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><circle cx="6" cy="6" r="4.5" stroke={CARE_COLORS.muted} strokeWidth="1.5"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke={CARE_COLORS.muted} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <input value={storeQuery} onChange={e => setStoreQuery(e.target.value)} placeholder="Search foods…" autoFocus style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink }} />
+                {storeQuery && <div onClick={() => setStoreQuery('')} style={{ cursor: 'pointer', color: CARE_COLORS.muted, fontSize: 16, lineHeight: 1 }}>×</div>}
+              </div>
+              <button onClick={() => setStoreFiltersOpen(x => !x)} style={{ border: `1.5px solid ${storeFiltersOpen ? CARE_COLORS.sageDeep : CARE_COLORS.line}`, background: storeFiltersOpen ? CARE_COLORS.sageSoft : CARE_COLORS.bg, color: storeFiltersOpen ? CARE_COLORS.sageDeep : CARE_COLORS.muted, fontFamily: careFont, fontWeight: 700, fontSize: 13, borderRadius: 10, padding: '0 14px', cursor: 'pointer', flexShrink: 0 }}>Filters</button>
+            </div>
+            {storeFiltersOpen && (
+              <div style={{ padding: '0 20px 6px', flexShrink: 0 }}>
+                <PillFilterRows textureFilter={storeTextureF} setTextureFilter={setStoreTextureF} tempFilter={storeTempF} setTempFilter={setStoreTempF} typeFilter={storeTypeF} setTypeFilter={setStoreTypeF} />
+              </div>
+            )}
+            <div style={{ flex: 1, overflow: 'auto', padding: '8px 20px 80px' }}>
+              {(() => {
+                const sq = storeQuery.trim().toLowerCase();
+                const allStoreFoods = [...new Set(CATALOG_CATS.flatMap(c => c.ids))].filter(id => FOOD_CATALOG[id]);
+                const filtered = allStoreFoods.filter(id => {
+                  if (sq && !FOOD_CATALOG[id]?.name.toLowerCase().includes(sq)) return false;
+                  const meta = FOOD_META[id];
+                  if (meta) {
+                    if (storeTextureF && !meta.textures.includes(storeTextureF)) return false;
+                    if (storeTempF && !meta.temps.includes(storeTempF)) return false;
+                    if (storeTypeF && meta.type !== storeTypeF) return false;
+                  }
+                  return true;
+                });
+                if (filtered.length === 0) return <div style={{ textAlign: 'center', color: CARE_COLORS.muted, fontFamily: careFont, fontSize: 14, marginTop: 32 }}>No results found</div>;
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    {filtered.map(id => {
+                      const onMenu = menu.includes(id);
+                      return (
+                        <div key={id} onClick={() => toggleFood(id)} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px 10px', borderRadius: 12, background: onMenu ? '#E4F3DC' : CARE_COLORS.bg, border: onMenu ? `1.5px solid #A9D18E` : `1px solid ${CARE_COLORS.lineSoft}`, cursor: 'pointer', transition: 'background .15s, border-color .15s' }}>
+                          <FoodImage id={id} size={52} />
+                          <div style={{ fontSize: 11, fontWeight: 600, color: CARE_COLORS.ink, textAlign: 'center', lineHeight: 1.2, fontFamily: careFont }}>{FOOD_CATALOG[id].name}</div>
+                          {onMenu && <div style={{ position: 'absolute', top: -6, right: -4, fontSize: 9, fontWeight: 800, background: CARE_COLORS.sageDeep, color: '#fff', padding: '2px 6px', borderRadius: 99, whiteSpace: 'nowrap', fontFamily: careFont }}>Added ✓</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -1991,7 +2060,7 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
     <>
       {screen === 'welcome'      && <CareWelcome      onStart={handleWelcomeStart} />}
       {screen === 'setup'        && <CareSetup        onDone={handleNameSaved} />}
-      {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={handleInternalSendMenu} onSaveMenu={addSavedMenu} onOpenPantry={() => setScreen('library')} pickedPlate={pickedPlate} onViewActivity={goToActivity} openKitchen={pendingKitchenOpen} onKitchenOpened={() => setPendingKitchenOpen(false)} onNewMenu={onNewMenu} />}
+      {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={handleInternalSendMenu} onSaveMenu={addSavedMenu} onOpenPantry={() => setScreen('library')} onStockFood={(id) => setKitchenIds(xs => [...new Set([...xs, id])])} pickedPlate={pickedPlate} onViewActivity={goToActivity} openKitchen={pendingKitchenOpen} onKitchenOpened={() => setPendingKitchenOpen(false)} onNewMenu={onNewMenu} />}
       {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} sentMealLabel={lastSentMeal} sentMenuItems={lastSentMenuItems} savedMenus={savedMenus} />}
       {screen === 'library'      && <CareLibrary      childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} onAddToKitchen={addToKitchen} onAddToMenu={(ids) => setMenu(xs => [...new Set([...xs, ...ids])])} onDone={() => { setPendingKitchenOpen(true); setScreen('today'); }} />}
       {settingsOpen && (
