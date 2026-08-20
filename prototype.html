@@ -25,6 +25,20 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <!-- PostHog analytics — replace phc_AqyKEasEGEUx6H6i5nSp9Q2SXhLM8KjwcAnZRNndPTrc with your project API key from posthog.com -->
+  <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config unregister opt_out_capturing opt_in_capturing has_opted_out_capturing has_opted_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId setPersonPropertiesForFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_AqyKEasEGEUx6H6i5nSp9Q2SXhLM8KjwcAnZRNndPTrc', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only',
+      capture_pageview: false,
+      session_recording: { maskAllInputs: false }
+    });
+    // Lightweight wrapper — fails silently if PostHog hasn't loaded yet
+    window.pypTrack = function(event, props) {
+      try { window.posthog && window.posthog.capture(event, props || {}); } catch(e) {}
+    };
+  </script>
   <script>
     firebase.initializeApp({
       apiKey: "AIzaSyBFeuJYBb1GnkBUA76lEOWNClXj_fdjuoU",
@@ -58,6 +72,7 @@ const FOOD_CATALOG = {
   banana:     { name: 'Banana',        color: '#f6d668', accent: '#c89a1a', shape: 'crescent' },
   toast:      { name: 'Toast',         color: '#e8c892', accent: '#9a6a32', shape: 'square' },
   egg:        { name: 'Boiled egg',    color: '#fafafa', accent: '#f6cc54', shape: 'egg' },
+  friedegg:   { name: 'Fried egg',    color: '#fdf5d8', accent: '#e8a010', shape: 'egg' },
   berries:    { name: 'Blueberries',   color: '#4a5496', accent: '#2c336b', shape: 'berries' },
   yogurt:     { name: 'Yoghurt',       color: '#f4efe4', accent: '#d8c8a4', shape: 'bowl' },
   cereal:     { name: 'Cereal',        color: '#e8b06a', accent: '#a46624', shape: 'loops' },
@@ -210,6 +225,16 @@ const FOOD_CATALOG = {
   butter:           { name: 'Butter',                color: '#f0d878', accent: '#c0a028', shape: 'square'  },
   broth:            { name: 'Broth',                 color: '#e8c878', accent: '#9a7020', shape: 'bowl'    },
   plainchicken:     { name: 'Chicken breast',        color: '#e6c28a', accent: '#a06c2a', shape: 'oval'    },
+  // Wave 4 additions
+  blueslushie:      { name: 'Blue slushie',          color: '#5bc8f5', accent: '#1a8fd1', shape: 'glass'   },
+  fusilli:          { name: 'Fusilli pasta',          color: '#f5d78e', accent: '#c8a030', shape: 'spiral'  },
+  cucumbersticks:   { name: 'Cucumber sticks',        color: '#c8e6b0', accent: '#5a9e40', shape: 'baton'   },
+  mangoslushie:     { name: 'Mango slushie',          color: '#f5a020', accent: '#d07010', shape: 'glass'   },
+  toadinthehole:    { name: 'Toad in the hole',       color: '#d4a060', accent: '#8a5020', shape: 'bowl'    },
+  sweetpotatofries: { name: 'Sweet potato fries',     color: '#e87030', accent: '#b05010', shape: 'bar'     },
+  halloumifries:    { name: 'Halloumi fries',         color: '#f0c060', accent: '#c09020', shape: 'bar'     },
+  shellpasta:       { name: 'Shell pasta',            color: '#f5d890', accent: '#c8a030', shape: 'bowl'    },
+  spaghetti:        { name: 'Spaghetti',              color: '#f0d870', accent: '#c8a030', shape: 'spiral'  },
 };
 
 function FoodImage({ id, size = 80 }) {
@@ -231,156 +256,166 @@ function FoodImage({ id, size = 80 }) {
   );
 }
 const FOOD_META = {
-  banana:           { textures: ['soft'],              temps: ['room','cold'], type: 'fruit'   },
-  toast:            { textures: ['crispy'],            temps: ['hot','room'],  type: 'grains'  },
-  egg:              { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  berries:          { textures: ['soft'],              temps: ['cold','room'], type: 'fruit'   },
-  yogurt:           { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
-  cereal:           { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  chicken:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
-  cheese:           { textures: ['soft','firm'],       temps: ['cold','room'], type: 'dairy'   },
-  beans:            { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  ham:              { textures: ['soft','chewy'],      temps: ['cold','room'], type: 'protein' },
-  tofu:             { textures: ['soft','firm'],       temps: ['room','hot'],  type: 'protein' },
-  fishstick:        { textures: ['crispy'],            temps: ['hot'],         type: 'protein' },
-  carrot:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
-  cucumber:         { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies' },
-  broccoli:         { textures: ['crunchy','tender'],  temps: ['hot','cold'],  type: 'veggies' },
-  spinach:          { textures: ['soft','tender'],     temps: ['hot','cold'],  type: 'veggies' },
-  lettuce:          { textures: ['crunchy','tender'],  temps: ['cold','room'], type: 'veggies' },
-  peas:             { textures: ['soft'],              temps: ['hot','cold'],  type: 'veggies' },
-  tomato:           { textures: ['juicy','soft'],      temps: ['cold','room'], type: 'veggies' },
-  apple:            { textures: ['crunchy'],           temps: ['cold','room'], type: 'fruit'   },
-  grapes:           { textures: ['firm'],              temps: ['cold'],        type: 'fruit'   },
-  strawberry:       { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
-  raspberries:      { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
-  orange:           { textures: ['juicy'],             temps: ['cold','room'], type: 'fruit'   },
-  pasta:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  rice:             { textures: ['soft','sticky'],     temps: ['hot'],         type: 'grains'  },
-  crackers:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  potato:           { textures: ['soft'],              temps: ['hot'],         type: 'veggies' },
-  milk:             { textures: ['smooth'],            temps: ['cold'],        type: 'dairy'   },
-  raisins:          { textures: ['chewy'],             temps: ['room'],        type: 'fruit'   },
-  tuna:             { textures: ['flaky','soft'],      temps: ['cold','room'], type: 'protein' },
-  turkey:           { textures: ['soft','chewy'],      temps: ['cold','hot'],  type: 'protein' },
-  hummus:           { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'protein' },
-  peanutbutter:     { textures: ['creamy','sticky'],   temps: ['room'],        type: 'protein' },
-  sausage:          { textures: ['chewy'],             temps: ['hot'],         type: 'protein' },
-  sweetpotato:      { textures: ['soft'],              temps: ['hot'],         type: 'veggies' },
-  pepper:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
-  celery:           { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies' },
-  cauliflower:      { textures: ['crunchy','soft'],    temps: ['hot','cold'],  type: 'veggies' },
-  edamame:          { textures: ['soft','firm'],       temps: ['hot','cold'],  type: 'protein' },
-  avocado:          { textures: ['creamy','soft'],     temps: ['cold','room'], type: 'fruit'   },
-  watermelon:       { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
-  peach:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit'   },
-  mango:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit'   },
-  pear:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
-  cherry:           { textures: ['firm','juicy'],      temps: ['cold'],        type: 'fruit'   },
-  kiwi:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit'   },
-  pineapple:        { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
-  bread:            { textures: ['soft'],              temps: ['room'],        type: 'grains'  },
-  wrap:             { textures: ['soft'],              temps: ['room'],        type: 'grains'  },
-  oatmeal:          { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
-  noodles:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  waffle:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  pancake:          { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
-  cottage:          { textures: ['creamy','soft'],     temps: ['cold'],        type: 'dairy'   },
-  stringcheese:     { textures: ['chewy','firm'],      temps: ['cold','room'], type: 'dairy'   },
-  applesauce:       { textures: ['smooth'],            temps: ['cold','room'], type: 'fruit'   },
-  popcorn:          { textures: ['crunchy','fluffy'],  temps: ['room'],        type: 'grains'  },
-  pretzel:          { textures: ['crunchy','chewy'],   temps: ['room'],        type: 'grains'  },
-  granola:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  snappeas:         { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies' },
-  fries:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  hotdog:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
-  cantaloupe:       { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit'   },
-  honeydew:         { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit'   },
-  mandarin:         { textures: ['juicy'],             temps: ['cold'],        type: 'fruit'   },
-  hashbrowns:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  bacon:            { textures: ['crispy','chewy'],    temps: ['hot'],         type: 'protein' },
-  burger:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
-  dumplings:        { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein' },
-  sushi:            { textures: ['soft','firm'],       temps: ['cold','room'], type: 'grains'  },
-  mac:              { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
-  pizza:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  grilledcheese:    { textures: ['crispy','gooey'],    temps: ['hot'],         type: 'grains'  },
-  quesadilla:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  pbj:              { textures: ['soft','sticky'],     temps: ['room'],        type: 'grains'  },
-  friedrice:        { textures: ['soft'],              temps: ['hot'],         type: 'grains'  },
-  icecream:         { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats'  },
-  greekyogurt:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
-  cookie:           { textures: ['crispy','chewy'],    temps: ['room'],        type: 'treats'  },
-  goldfish:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  donut:            { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats'  },
-  bagel:            { textures: ['chewy'],             temps: ['room','hot'],  type: 'grains'  },
-  applejuice:       { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
-  oj:               { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
-  guacamole:        { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'veggies' },
-  coleslaw:         { textures: ['crunchy','soft'],    temps: ['cold'],        type: 'veggies' },
-  chickennoodlesoup:{ textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  spagmeatballs:    { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  beefstew:         { textures: ['soft','tender'],     temps: ['hot'],         type: 'protein' },
-  cod:              { textures: ['flaky','soft'],      temps: ['hot'],         type: 'protein' },
-  onigiri:          { textures: ['soft','sticky'],     temps: ['cold','room'], type: 'grains'  },
-  eggsandwich:      { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  creamcheese:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy'   },
-  cinnamontoast:    { textures: ['crispy'],            temps: ['hot'],         type: 'grains'  },
-  roll:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'grains'  },
-  spaghettios:      { textures: ['soft'],              temps: ['hot'],         type: 'grains'  },
-  nutella:          { textures: ['creamy','smooth'],   temps: ['room'],        type: 'protein' },
-  pumpkinseeds:     { textures: ['crunchy'],           temps: ['room'],        type: 'protein' },
-  poptart:          { textures: ['crispy','soft'],     temps: ['hot','room'],  type: 'treats'  },
-  jello:            { textures: ['smooth'],            temps: ['cold'],        type: 'treats'  },
-  marshmallows:     { textures: ['soft','fluffy','sticky'], temps: ['room'],   type: 'treats'  },
-  applepie:         { textures: ['soft','crispy'],     temps: ['hot','room'],  type: 'treats'  },
-  smores:           { textures: ['soft','gooey','crunchy'], temps: ['hot'],    type: 'treats'  },
-  grahams:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  oreo:             { textures: ['crunchy','creamy'],  temps: ['room'],        type: 'treats'  },
-  cake:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats'  },
-  tortillachips:    { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  turkeysandwich:   { textures: ['soft'],              temps: ['cold','room'], type: 'grains'  },
-  hamsandwich:      { textures: ['soft'],              temps: ['cold','room'], type: 'grains'  },
-  chickenrice:      { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  caprisun:         { textures: ['smooth'],            temps: ['cold'],        type: 'fruit'   },
-  hotchocolate:     { textures: ['smooth','creamy'],   temps: ['hot'],         type: 'dairy'   },
-  corndog:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
-  chips:            { textures: ['crunchy'],           temps: ['room'],        type: 'grains'  },
-  fruitsnack:       { textures: ['chewy','sticky'],    temps: ['room'],        type: 'fruit'   },
-  popsicle:         { textures: ['smooth'],            temps: ['frozen'],      type: 'treats'  },
-  nachos:           { textures: ['crunchy'],           temps: ['hot'],         type: 'grains'  },
-  scrambledegg:     { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'protein' },
-  mashedpotato:     { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains'  },
-  frenchtoast:      { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
-  tatertots:        { textures: ['crispy','crunchy'],  temps: ['hot'],         type: 'grains'  },
-  chocolatemilk:    { textures: ['smooth','creamy'],   temps: ['cold'],        type: 'dairy'   },
-  lasagna:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  garlicbread:      { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  ramen:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  eggroll:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  tacos:            { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'grains'  },
-  burrito:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains'  },
-  samosa:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains'  },
-  naan:             { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains'  },
-  corn:             { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'veggies' },
-  salad:            { textures: ['crunchy','crisp'],   temps: ['cold'],        type: 'veggies' },
-  friedchicken:     { textures: ['crispy'],             temps: ['hot'],         type: 'protein' },
-  chickensandwich:  { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
-  chili:            { textures: ['soft'],              temps: ['hot'],         type: 'protein' },
-  fishsandwich:     { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein' },
-  milkshake:        { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats'  },
-  soda:             { textures: ['smooth'],            temps: ['cold'],        type: 'treats'  },
-  onionrings:       { textures: ['crunchy'],           temps: ['hot'],         type: 'veggies' },
-  pickle:           { textures: ['crunchy'],            temps: ['cold'],        type: 'veggies' },
-  salmon:           { textures: ['flaky','soft'],       temps: ['hot'],         type: 'protein' },
-  meatballs:        { textures: ['soft','chewy'],       temps: ['hot'],         type: 'protein' },
-  ricekrispietreat: { textures: ['crunchy','chewy','sticky'], temps: ['room'],  type: 'treats'  },
-  instantbreakfast: { textures: ['smooth'],             temps: ['cold'],        type: 'dairy'   },
-  candybar:         { textures: ['chewy','crunchy'],    temps: ['room'],        type: 'treats'  },
-  water:            { textures: ['smooth'],             temps: ['cold','room'], type: 'dairy'   },
-  butter:           { textures: ['creamy','smooth'],    temps: ['room'],        type: 'dairy'   },
-  broth:            { textures: ['smooth'],             temps: ['hot'],         type: 'protein' },
-  plainchicken:     { textures: ['soft','tender'],      temps: ['hot'],         type: 'protein' },
+  banana:           { textures: ['soft'],              temps: ['room','cold'], type: 'fruit',   flavors: ['sweet']          },
+  toast:            { textures: ['crispy'],            temps: ['hot','room'],  type: 'grains',  flavors: ['salty']          },
+  egg:              { textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami']          },
+  friedegg:         { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein', flavors: ['umami','salty']   },
+  berries:          { textures: ['soft'],              temps: ['cold','room'], type: 'fruit',   flavors: ['sweet','sour']   },
+  yogurt:           { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy',   flavors: ['sweet','sour']   },
+  cereal:           { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['sweet']          },
+  chicken:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  cheese:           { textures: ['soft','firm'],       temps: ['cold','room'], type: 'dairy',   flavors: ['umami','salty']  },
+  beans:            { textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami']          },
+  ham:              { textures: ['soft','chewy'],      temps: ['cold','room'], type: 'protein', flavors: ['salty','umami']  },
+  tofu:             { textures: ['soft','firm'],       temps: ['room','hot'],  type: 'protein', flavors: ['umami']          },
+  fishstick:        { textures: ['crispy'],            temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  carrot:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies', flavors: ['sweet']          },
+  cucumber:         { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies', flavors: ['bitter']         },
+  broccoli:         { textures: ['crunchy','tender'],  temps: ['hot','cold'],  type: 'veggies', flavors: ['bitter']         },
+  spinach:          { textures: ['soft','tender'],     temps: ['hot','cold'],  type: 'veggies', flavors: ['bitter']         },
+  lettuce:          { textures: ['crunchy','tender'],  temps: ['cold','room'], type: 'veggies', flavors: ['bitter']         },
+  peas:             { textures: ['soft'],              temps: ['hot','cold'],  type: 'veggies', flavors: ['sweet']          },
+  tomato:           { textures: ['juicy','soft'],      temps: ['cold','room'], type: 'veggies', flavors: ['umami','sour']   },
+  apple:            { textures: ['crunchy'],           temps: ['cold','room'], type: 'fruit',   flavors: ['sweet','sour']   },
+  grapes:           { textures: ['firm'],              temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  strawberry:       { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit',   flavors: ['sweet','sour']   },
+  raspberries:      { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit',   flavors: ['sour','sweet']   },
+  orange:           { textures: ['juicy'],             temps: ['cold','room'], type: 'fruit',   flavors: ['sweet','sour']   },
+  pasta:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  rice:             { textures: ['soft','sticky'],     temps: ['hot'],         type: 'grains',  flavors: ['umami']          },
+  crackers:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  potato:           { textures: ['soft'],              temps: ['hot'],         type: 'veggies', flavors: ['umami']          },
+  milk:             { textures: ['smooth'],            temps: ['cold'],        type: 'dairy',   flavors: ['sweet']          },
+  raisins:          { textures: ['chewy'],             temps: ['room'],        type: 'fruit',   flavors: ['sweet']          },
+  tuna:             { textures: ['flaky','soft'],      temps: ['cold','room'], type: 'protein', flavors: ['umami','salty']  },
+  turkey:           { textures: ['soft','chewy'],      temps: ['cold','hot'],  type: 'protein', flavors: ['umami','salty']  },
+  hummus:           { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'protein', flavors: ['umami','salty']  },
+  peanutbutter:     { textures: ['creamy','sticky'],   temps: ['room'],        type: 'protein', flavors: ['sweet','salty']  },
+  sausage:          { textures: ['chewy'],             temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  sweetpotato:      { textures: ['soft'],              temps: ['hot'],         type: 'veggies', flavors: ['sweet']          },
+  pepper:           { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies', flavors: ['sweet']          },
+  celery:           { textures: ['crunchy'],           temps: ['cold'],        type: 'veggies', flavors: ['bitter','salty']  },
+  cauliflower:      { textures: ['crunchy','soft'],    temps: ['hot','cold'],  type: 'veggies', flavors: ['bitter']         },
+  edamame:          { textures: ['soft','firm'],       temps: ['hot','cold'],  type: 'protein', flavors: ['umami','salty']  },
+  avocado:          { textures: ['creamy','soft'],     temps: ['cold','room'], type: 'fruit',   flavors: ['umami']          },
+  watermelon:       { textures: ['juicy'],             temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  peach:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit',   flavors: ['sweet']          },
+  mango:            { textures: ['soft','juicy'],      temps: ['cold','room'], type: 'fruit',   flavors: ['sweet']          },
+  pear:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  cherry:           { textures: ['firm','juicy'],      temps: ['cold'],        type: 'fruit',   flavors: ['sweet','sour']   },
+  kiwi:             { textures: ['soft','juicy'],      temps: ['cold'],        type: 'fruit',   flavors: ['sour','sweet']   },
+  pineapple:        { textures: ['juicy'],             temps: ['cold'],        type: 'fruit',   flavors: ['sweet','sour']   },
+  bread:            { textures: ['soft'],              temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  wrap:             { textures: ['soft'],              temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  oatmeal:          { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains',  flavors: ['sweet']          },
+  noodles:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  waffle:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['sweet']          },
+  pancake:          { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains',  flavors: ['sweet']          },
+  cottage:          { textures: ['creamy','soft'],     temps: ['cold'],        type: 'dairy',   flavors: ['salty','sour']   },
+  stringcheese:     { textures: ['chewy','firm'],      temps: ['cold','room'], type: 'dairy',   flavors: ['umami','salty']  },
+  applesauce:       { textures: ['smooth'],            temps: ['cold','room'], type: 'fruit',   flavors: ['sweet']          },
+  popcorn:          { textures: ['crunchy','fluffy'],  temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  pretzel:          { textures: ['crunchy','chewy'],   temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  granola:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['sweet']          },
+  snappeas:         { textures: ['crunchy'],           temps: ['cold','room'], type: 'veggies', flavors: ['sweet']          },
+  fries:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['salty']          },
+  hotdog:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  cantaloupe:       { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  honeydew:         { textures: ['juicy','soft'],      temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  mandarin:         { textures: ['juicy'],             temps: ['cold'],        type: 'fruit',   flavors: ['sweet','sour']   },
+  hashbrowns:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['salty']          },
+  bacon:            { textures: ['crispy','chewy'],    temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  burger:           { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  dumplings:        { textures: ['soft','chewy'],      temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  sushi:            { textures: ['soft','firm'],       temps: ['cold','room'], type: 'grains',  flavors: ['umami','salty']  },
+  mac:              { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  pizza:            { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  grilledcheese:    { textures: ['crispy','gooey'],    temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  quesadilla:       { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  pbj:              { textures: ['soft','sticky'],     temps: ['room'],        type: 'grains',  flavors: ['sweet','salty']  },
+  friedrice:        { textures: ['soft'],              temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  icecream:         { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats',  flavors: ['sweet']          },
+  greekyogurt:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy',   flavors: ['sour','sweet']   },
+  cookie:           { textures: ['crispy','chewy'],    temps: ['room'],        type: 'treats',  flavors: ['sweet']          },
+  goldfish:         { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  donut:            { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats',  flavors: ['sweet']          },
+  bagel:            { textures: ['chewy'],             temps: ['room','hot'],  type: 'grains',  flavors: ['salty']          },
+  applejuice:       { textures: ['smooth'],            temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  oj:               { textures: ['smooth'],            temps: ['cold'],        type: 'fruit',   flavors: ['sweet','sour']   },
+  guacamole:        { textures: ['creamy','smooth'],   temps: ['cold','room'], type: 'veggies', flavors: ['umami','salty']  },
+  coleslaw:         { textures: ['crunchy','soft'],    temps: ['cold'],        type: 'veggies', flavors: ['sour','salty']   },
+  chickennoodlesoup:{ textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  spagmeatballs:    { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  beefstew:         { textures: ['soft','tender'],     temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  cod:              { textures: ['flaky','soft'],      temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  onigiri:          { textures: ['soft','sticky'],     temps: ['cold','room'], type: 'grains',  flavors: ['umami','salty']  },
+  eggsandwich:      { textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  creamcheese:      { textures: ['creamy','smooth'],   temps: ['cold'],        type: 'dairy',   flavors: ['salty','sour']   },
+  cinnamontoast:    { textures: ['crispy'],            temps: ['hot'],         type: 'grains',  flavors: ['sweet']          },
+  roll:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  spaghettios:      { textures: ['soft'],              temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  nutella:          { textures: ['creamy','smooth'],   temps: ['room'],        type: 'protein', flavors: ['sweet']          },
+  pumpkinseeds:     { textures: ['crunchy'],           temps: ['room'],        type: 'protein', flavors: ['salty']          },
+  poptart:          { textures: ['crispy','soft'],     temps: ['hot','room'],  type: 'treats',  flavors: ['sweet']          },
+  jello:            { textures: ['smooth'],            temps: ['cold'],        type: 'treats',  flavors: ['sweet']          },
+  marshmallows:     { textures: ['soft','fluffy','sticky'], temps: ['room'],   type: 'treats',  flavors: ['sweet']          },
+  applepie:         { textures: ['soft','crispy'],     temps: ['hot','room'],  type: 'treats',  flavors: ['sweet']          },
+  smores:           { textures: ['soft','gooey','crunchy'], temps: ['hot'],    type: 'treats',  flavors: ['sweet']          },
+  grahams:          { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['sweet']          },
+  oreo:             { textures: ['crunchy','creamy'],  temps: ['room'],        type: 'treats',  flavors: ['sweet']          },
+  cake:             { textures: ['soft','fluffy'],     temps: ['room'],        type: 'treats',  flavors: ['sweet']          },
+  tortillachips:    { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  turkeysandwich:   { textures: ['soft'],              temps: ['cold','room'], type: 'grains',  flavors: ['umami','salty']  },
+  hamsandwich:      { textures: ['soft'],              temps: ['cold','room'], type: 'grains',  flavors: ['salty','umami']  },
+  chickenrice:      { textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  caprisun:         { textures: ['smooth'],            temps: ['cold'],        type: 'fruit',   flavors: ['sweet']          },
+  hotchocolate:     { textures: ['smooth','creamy'],   temps: ['hot'],         type: 'dairy',   flavors: ['sweet']          },
+  corndog:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  chips:            { textures: ['crunchy'],           temps: ['room'],        type: 'grains',  flavors: ['salty']          },
+  fruitsnack:       { textures: ['chewy','sticky'],    temps: ['room'],        type: 'fruit',   flavors: ['sweet']          },
+  popsicle:         { textures: ['smooth'],            temps: ['frozen'],      type: 'treats',  flavors: ['sweet']          },
+  nachos:           { textures: ['crunchy'],           temps: ['hot'],         type: 'grains',  flavors: ['salty','umami']  },
+  scrambledegg:     { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  mashedpotato:     { textures: ['soft','creamy'],     temps: ['hot'],         type: 'grains',  flavors: ['salty','umami']  },
+  frenchtoast:      { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains',  flavors: ['sweet']          },
+  tatertots:        { textures: ['crispy','crunchy'],  temps: ['hot'],         type: 'grains',  flavors: ['salty']          },
+  chocolatemilk:    { textures: ['smooth','creamy'],   temps: ['cold'],        type: 'dairy',   flavors: ['sweet']          },
+  lasagna:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  garlicbread:      { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['salty','umami']  },
+  ramen:            { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  eggroll:          { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  tacos:            { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  burrito:          { textures: ['soft','chewy'],      temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  samosa:           { textures: ['crispy','soft'],     temps: ['hot'],         type: 'grains',  flavors: ['umami','salty']  },
+  naan:             { textures: ['soft','fluffy'],     temps: ['hot'],         type: 'grains',  flavors: ['salty']          },
+  corn:             { textures: ['crunchy','soft'],    temps: ['hot'],         type: 'veggies', flavors: ['sweet']          },
+  salad:            { textures: ['crunchy','crisp'],   temps: ['cold'],        type: 'veggies', flavors: ['bitter']         },
+  friedchicken:     { textures: ['crispy'],             temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  chickensandwich:  { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  chili:            { textures: ['soft'],              temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  fishsandwich:     { textures: ['crispy','soft'],     temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  milkshake:        { textures: ['creamy','smooth'],   temps: ['frozen'],      type: 'treats',  flavors: ['sweet']          },
+  soda:             { textures: ['smooth'],            temps: ['cold'],        type: 'treats',  flavors: ['sweet']          },
+  onionrings:       { textures: ['crunchy'],           temps: ['hot'],         type: 'veggies', flavors: ['salty','umami']  },
+  pickle:           { textures: ['crunchy'],            temps: ['cold'],        type: 'veggies', flavors: ['sour','salty']   },
+  salmon:           { textures: ['flaky','soft'],       temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  meatballs:        { textures: ['soft','chewy'],       temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  ricekrispietreat: { textures: ['crunchy','chewy','sticky'], temps: ['room'],  type: 'treats',  flavors: ['sweet']          },
+  instantbreakfast: { textures: ['smooth'],             temps: ['cold'],        type: 'dairy',   flavors: ['sweet']          },
+  candybar:         { textures: ['chewy','crunchy'],    temps: ['room'],        type: 'treats',  flavors: ['sweet']          },
+  water:            { textures: ['smooth'],             temps: ['cold','room'], type: 'dairy',   flavors: []                 },
+  butter:           { textures: ['creamy','smooth'],    temps: ['room'],        type: 'dairy',   flavors: ['salty','umami']  },
+  broth:            { textures: ['smooth'],             temps: ['hot'],         type: 'protein', flavors: ['umami','salty']  },
+  plainchicken:     { textures: ['soft','tender'],      temps: ['hot'],         type: 'protein', flavors: ['umami']          },
+  blueslushie:      { textures: ['smooth','icy'],       temps: ['frozen'],      type: 'treats',  flavors: ['sweet']          },
+  fusilli:          { textures: ['soft','chewy'],       temps: ['hot'],         type: 'grains',  flavors: ['umami']          },
+  cucumbersticks:   { textures: ['crunchy','crisp'],    temps: ['cold','room'], type: 'veggies', flavors: ['bitter']         },
+  mangoslushie:     { textures: ['smooth','icy'],       temps: ['frozen'],      type: 'treats',  flavors: ['sweet','sour']   },
+  toadinthehole:    { textures: ['soft','crispy'],      temps: ['hot'],         type: 'protein', flavors: ['salty','umami']  },
+  sweetpotatofries: { textures: ['crispy','soft'],      temps: ['hot'],         type: 'veggies', flavors: ['sweet','salty']  },
+  halloumifries:    { textures: ['crispy','chewy'],     temps: ['hot'],         type: 'protein', flavors: ['salty']          },
+  shellpasta:       { textures: ['soft','chewy'],       temps: ['hot'],         type: 'grains',  flavors: ['umami']          },
+  spaghetti:        { textures: ['soft','chewy'],       temps: ['hot'],         type: 'grains',  flavors: ['umami']          },
 };
 Object.assign(window, { FOOD_CATALOG, FOOD_META, FoodImage });
   </script>
@@ -392,10 +427,25 @@ const PLATE_TYPES = [
   { id: 'rainbow',       label: 'Rainbow',     caption: 'Color by color'     },
   { id: 'one-new-thing', label: '1 New Thing', caption: 'Spotlight one food' },
   { id: 'snack',         label: 'Snack',       caption: 'Smaller plate'      },
+  { id: 'lunchbox',      label: 'Lunchbox',    caption: 'Bento box'          },
 ];
+// Bento compartment centers (% coords) — main, top-right, bottom-right, bottom-left
+const LUNCHBOX_COMPARTMENTS = [[29,31],[79,22],[79,72],[29,81]];
 
 function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e4', rimInset = 18, chip = false }) {
   const svgStyle = { position: 'absolute', top: rimInset, left: rimInset, width: `calc(100% - ${rimInset * 2}px)`, height: `calc(100% - ${rimInset * 2}px)`, pointerEvents: 'none', display: 'block' };
+  if (type === 'lunchbox') {
+    const inset = chip ? 0 : 8;
+    const lbStyle = { position: 'absolute', top: inset, left: inset, width: `calc(100% - ${inset * 2}px)`, height: `calc(100% - ${inset * 2}px)`, pointerEvents: 'none', display: 'block' };
+    const div = { stroke: '#c8bfb0', strokeWidth: chip ? 3 : 1.8, strokeLinecap: 'round' };
+    return (
+      <svg viewBox="0 0 100 100" style={lbStyle}>
+        <line x1="57" y1="0" x2="57" y2="100" {...div} />
+        <line x1="0"  y1="60" x2="57" y2="60" {...div} />
+        <line x1="57" y1="44" x2="100" y2="44" {...div} />
+      </svg>
+    );
+  }
   if (type === 'divided') {
     return (
       <svg viewBox="0 0 100 100" style={svgStyle}>
@@ -446,6 +496,17 @@ function PlateShape({ type = 'basic', plateColor = '#ffffff', rimColor = '#e4e4e
 function PlateChip({ type, size = 40 }) {
   const scale = type === 'snack' ? 0.78 : 1;
   const px = size * scale;
+  if (type === 'lunchbox') {
+    const bw = Math.round(px * 1.18), bh = Math.round(px * 0.84);
+    const r = Math.max(3, Math.round(px * 0.1));
+    return (
+      <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: bw, height: bh, borderRadius: r, position: 'relative', background: 'linear-gradient(145deg, #f8f5ee 0%, #eee5d0 100%)', boxShadow: '0 1px 4px rgba(60,40,20,.18), inset 0 0 0 1.5px #c8bfb0' }}>
+          <PlateShape type="lunchbox" rimInset={0} chip={true} />
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <div style={{ width: px, height: px, borderRadius: '50%', position: 'relative', background: 'radial-gradient(circle at 35% 30%, #fff 0%, #ffffff 55%, #e4e4e4 100%)', boxShadow: '0 1px 3px rgba(60,40,20,.12), inset 0 1px 0 rgba(255,255,255,.6)' }}>
@@ -503,7 +564,9 @@ const CHILD_COLORS = {
 function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic', itemSize = 149, outerRef }) {
   const localRef = React.useRef(null);
   const plateRef = outerRef || localRef;
+  const isLunchbox = plateType === 'lunchbox';
   const visualSize = plateType === 'snack' ? size * 0.72 : size;
+  const effectiveItemSize = isLunchbox ? Math.round(size * 0.22) : itemSize;
   const [jiggling, setJiggling] = React.useState(false);
   const onItemPointerDown = (e, item) => {
     e.stopPropagation();
@@ -531,7 +594,14 @@ function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic
         const ddx = nx_raw - 50, ddy = ny_raw - 50;
         const dist = Math.hypot(ddx, ddy);
         let nx = nx_raw, ny = ny_raw;
-        if (dist > 47) {
+        if (isLunchbox) {
+          const EDGE = 9;
+          if (nx_raw < EDGE || nx_raw > 100 - EDGE || ny_raw < EDGE || ny_raw > 100 - EDGE) {
+            el.dataset.willRemove = '1';
+            nx = Math.max(EDGE, Math.min(100 - EDGE, nx_raw));
+            ny = Math.max(EDGE, Math.min(100 - EDGE, ny_raw));
+          } else { delete el.dataset.willRemove; }
+        } else if (dist > 47) {
           el.dataset.willRemove = '1';
           nx = 50 + Math.cos(Math.atan2(ddy, ddx)) * 47;
           ny = 50 + Math.sin(Math.atan2(ddy, ddx)) * 47;
@@ -553,12 +623,12 @@ function Plate({ size = 420, items, onRemove, onMove, active, plateType = 'basic
     el.addEventListener('pointercancel', up);
   };
   return (
-    <div ref={plateRef} onClick={() => { if (jiggling) setJiggling(false); }} style={{ position: 'relative', width: visualSize, height: visualSize, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, #fff 0%, ${CHILD_COLORS.plate} 55%, ${CHILD_COLORS.plateRim} 100%)`, boxShadow: active ? `0 12px 48px ${CHILD_COLORS.plateShadow}, 0 0 0 4px ${CHILD_COLORS.sage}33, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)` : `0 10px 40px ${CHILD_COLORS.plateShadow}, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)`, transition: 'box-shadow .25s, width .25s, height .25s' }}>
-      <div style={{ position: 'absolute', inset: 18, borderRadius: '50%', boxShadow: `inset 0 0 0 1px ${CHILD_COLORS.plateRim}, inset 0 0 0 2px rgba(255,255,255,.4)`, pointerEvents: 'none' }} />
+    <div ref={plateRef} onClick={() => { if (jiggling) setJiggling(false); }} style={{ position: 'relative', width: visualSize, height: visualSize, borderRadius: isLunchbox ? 22 : '50%', background: isLunchbox ? 'linear-gradient(145deg, #faf7f0 0%, #f0e8d4 100%)' : `radial-gradient(circle at 35% 30%, #fff 0%, ${CHILD_COLORS.plate} 55%, ${CHILD_COLORS.plateRim} 100%)`, boxShadow: isLunchbox ? (active ? `0 12px 48px ${CHILD_COLORS.plateShadow}, 0 0 0 4px ${CHILD_COLORS.sage}33, inset 0 0 0 2.5px #c8bfb0` : `0 10px 40px ${CHILD_COLORS.plateShadow}, inset 0 0 0 2.5px #c8bfb0`) : (active ? `0 12px 48px ${CHILD_COLORS.plateShadow}, 0 0 0 4px ${CHILD_COLORS.sage}33, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)` : `0 10px 40px ${CHILD_COLORS.plateShadow}, inset 0 2px 0 rgba(255,255,255,.6), inset 0 -6px 0 rgba(60,40,20,.05)`), transition: 'box-shadow .25s, width .25s, height .25s' }}>
+      {!isLunchbox && <div style={{ position: 'absolute', inset: 18, borderRadius: '50%', boxShadow: `inset 0 0 0 1px ${CHILD_COLORS.plateRim}, inset 0 0 0 2px rgba(255,255,255,.4)`, pointerEvents: 'none' }} />}
       <PlateShape type={plateType} plateColor={CHILD_COLORS.plate} rimColor={CHILD_COLORS.plateRim} />
       {items.map((it, i) => (
         <div key={it.uid} onPointerDown={(e) => onItemPointerDown(e, it)} style={{ position: 'absolute', left: `${it.x}%`, top: `${it.y}%`, transform: 'translate(-50%, -50%)', cursor: jiggling ? 'pointer' : 'grab', touchAction: 'none', userSelect: 'none', animation: jiggling ? `ppJiggle .35s ease-in-out ${i * 0.07}s infinite alternate` : 'ppPlacedIn .32s cubic-bezier(.2,.8,.3,1.1)' }}>
-          <FoodImage id={it.id} size={itemSize} />
+          <FoodImage id={it.id} size={effectiveItemSize} />
         </div>
       ))}
     </div>
@@ -654,7 +724,7 @@ function PlateyReaction({ count }) {
   );
 }
 
-function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onSubmit, sentMenu, onResetCode }) {
+function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onSubmit, sentMenu, onResetCode, fsStatus }) {
   const T = {
     cream: tweaks.bg || CHILD_COLORS.cream, paper: tweaks.paper || CHILD_COLORS.paper,
     accent: tweaks.accent || CHILD_COLORS.sageDeep, accentSoft: tweaks.accentSoft || CHILD_COLORS.sage,
@@ -676,9 +746,19 @@ function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onS
   const plateCircleRef = React.useRef(null);
   const uidRef = React.useRef(10);
   const ghostRef = React.useRef(null);
-  // On mount, remove any ghost left behind by a previous ChildApp instance
+  // On mount and orientation change, remove any orphaned ghost elements
   React.useEffect(() => {
     document.querySelectorAll('[data-pyp-ghost]').forEach(el => el.remove());
+    const clearGhost = () => {
+      if (ghostRef.current) { ghostRef.current.remove(); ghostRef.current = null; }
+      document.querySelectorAll('[data-pyp-ghost]').forEach(el => el.remove());
+    };
+    window.addEventListener('orientationchange', clearGhost);
+    window.addEventListener('blur', clearGhost);
+    return () => {
+      window.removeEventListener('orientationchange', clearGhost);
+      window.removeEventListener('blur', clearGhost);
+    };
   }, []);
   const [showPlatePicker, setShowPlatePicker] = React.useState(false);
   const [showCodeHint, setShowCodeHint] = React.useState(false);
@@ -874,6 +954,14 @@ function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onS
 
   const onTapAdd = (id) => {
     if (items.some(it => it.id === id)) return;
+    if (plateType === 'lunchbox') {
+      // Assign to the next empty compartment center in order; overflow goes to main
+      const idx = Math.min(items.length, LUNCHBOX_COMPARTMENTS.length - 1);
+      const [cx, cy] = LUNCHBOX_COMPARTMENTS[idx];
+      const jitter = v => v + (Math.random() - 0.5) * 6;
+      setItems(xs => [...xs, { uid: uidRef.current++, id, x: jitter(cx), y: jitter(cy) }]);
+      return;
+    }
     // item radius ~13% of plate coords; keep centers ≥28% apart and ≥13% from edge
     const candidates = [];
     for (let x = 18; x <= 82; x += 7)
@@ -968,7 +1056,7 @@ function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onS
           <PlateyReaction count={items.length} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 8, minHeight: 68, position: 'relative', zIndex: 1 }}>
             {items.length > 0 && (
-              <button onClick={() => { setSending(true); setTimeout(() => setConfirming(true), 700); onSubmit && onSubmit({ items, plateType, submittedAt: Date.now() }); }} style={{ border: 'none', padding: '18px 40px', borderRadius: 899, fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, background: T.accent, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', animation: 'ppFadeIn .25s ease' }}>
+              <button onClick={() => { setSending(true); setTimeout(() => setConfirming(true), 700); window.pypTrack('plate_submitted', { food_count: items.length, plate_type: plateType, food_ids: items.map(i => i.id) }); onSubmit && onSubmit({ items, plateType, submittedAt: Date.now() }); }} style={{ border: 'none', padding: '18px 40px', borderRadius: 899, fontFamily: T.displayFont, fontSize: 22, fontWeight: 500, letterSpacing: -.2, background: T.accent, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', animation: 'ppFadeIn .25s ease' }}>
                 {T.sendLabel}
               </button>
             )}
@@ -989,6 +1077,10 @@ function ChildApp({ width = 1180, height = 820, childName = '', tweaks = {}, onS
                     <>
                       <div style={{ padding: '5px 14px', background: 'rgba(0,0,0,.05)', borderRadius: 8, fontFamily: 'Nunito, system-ui', fontSize: 15, fontWeight: 800, color: CHILD_COLORS.muted, letterSpacing: 5 }}>
                         {localStorage.getItem('pyp_family_code')}
+                      </div>
+                      <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 11, fontWeight: 700, color: fsStatus === 'ok' ? '#4a7c59' : fsStatus === 'error' ? '#c0392b' : '#8a7c66', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: fsStatus === 'ok' ? '#4a7c59' : fsStatus === 'error' ? '#c0392b' : '#c0b8a8', display: 'inline-block' }} />
+                        {fsStatus === 'ok' ? 'Connected — waiting for menu' : fsStatus === 'error' ? 'Connection error — check network' : 'Connecting…'}
                       </div>
                       {showCodeHint && (
                         <div style={{ padding: '10px 14px', background: '#fdf5e0', border: '1px solid #e8d070', borderRadius: 12, maxWidth: 230, textAlign: 'center' }}>
@@ -1173,59 +1265,99 @@ function FoodChip({ id, onRemove, compact }) {
 
 const KITCHEN = [
   { label: 'Fruit',           ids: ['apple', 'applesauce', 'banana', 'strawberry', 'raspberries', 'berries', 'grapes', 'watermelon', 'orange'] },
-  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'sweetpotato', 'lettuce', 'peas', 'snappeas'] },
-  { label: 'Grains & Sides',  ids: ['rice', 'pasta', 'toast', 'crackers', 'fries', 'potato', 'mac', 'pizza'] },
-  { label: 'Protein & Dairy', ids: ['chicken', 'hotdog', 'egg', 'ham', 'cheese', 'yogurt', 'milk', 'fishstick'] },
-  { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'cucumbersticks', 'broccoli', 'sweetpotato', 'lettuce', 'peas', 'snappeas'] },
+  { label: 'Grains & Sides',  ids: ['rice', 'pasta', 'fusilli', 'shellpasta', 'spaghetti', 'toast', 'crackers', 'fries', 'sweetpotatofries', 'potato', 'mac', 'pizza'] },
+  { label: 'Protein & Dairy', ids: ['chicken', 'hotdog', 'egg', 'friedegg', 'ham', 'cheese', 'yogurt', 'milk', 'fishstick', 'toadinthehole', 'halloumifries'] },
+  { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake', 'blueslushie', 'mangoslushie'] },
 ];
 
-function PillFilterRows({ textureFilter, setTextureFilter, tempFilter, setTempFilter, typeFilter, setTypeFilter }) {
-  const hasAny = textureFilter || tempFilter || typeFilter;
-  const pill = (active) => ({
-    flexShrink: 0, border: active ? `1.5px solid ${CARE_COLORS.sageDeep}` : `1px solid ${CARE_COLORS.line}`,
-    background: active ? CARE_COLORS.sageSoft : '#fff', borderRadius: 999,
-    padding: '5px 13px', fontFamily: careFont, fontSize: 12, fontWeight: 600,
-    color: active ? CARE_COLORS.sageDeep : CARE_COLORS.muted, cursor: 'pointer',
-    transition: 'all .15s', whiteSpace: 'nowrap', outline: 'none',
-  });
-  const Row = ({ options, active, onSelect }) => (
-    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none', msOverflowStyle: 'none',
-      WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)',
-      maskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)',
-    }}>
-      {options.map(opt => (
-        <button key={opt.value} onClick={() => onSelect(active === opt.value ? null : opt.value)} style={pill(active === opt.value)}>
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
+function FilterDropdowns({ textureFilter, setTextureFilter, tempFilter, setTempFilter, typeFilter, setTypeFilter, flavorFilter, setFlavorFilter }) {
+  const [open, setOpen] = React.useState(null);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(null); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  const hasAny = textureFilter || tempFilter || typeFilter || flavorFilter;
+  const CATS = [
+    { id: 'texture', label: 'Texture', value: textureFilter, set: setTextureFilter,
+      opts: [
+        { label: 'Crunchy', value: 'crunchy' }, { label: 'Crispy',  value: 'crispy' },
+        { label: 'Soft',    value: 'soft'    }, { label: 'Creamy',  value: 'creamy' },
+        { label: 'Chewy',   value: 'chewy'   }, { label: 'Smooth',  value: 'smooth' },
+        { label: 'Fluffy',  value: 'fluffy'  }, { label: 'Juicy',   value: 'juicy'  },
+        { label: 'Firm',    value: 'firm'    }, { label: 'Sticky',  value: 'sticky' },
+      ] },
+    { id: 'temp', label: 'Temp', value: tempFilter, set: setTempFilter,
+      opts: [
+        { label: 'Hot', value: 'hot' }, { label: 'Cold', value: 'cold' },
+        { label: 'Room Temp', value: 'room' }, { label: 'Frozen', value: 'frozen' },
+      ] },
+    { id: 'type', label: 'Type', value: typeFilter, set: setTypeFilter,
+      opts: [
+        { label: 'Fruit', value: 'fruit' }, { label: 'Veggies', value: 'veggies' },
+        { label: 'Protein', value: 'protein' }, { label: 'Dairy', value: 'dairy' },
+        { label: 'Grains', value: 'grains' }, { label: 'Sweets & Snacks', value: 'treats' },
+      ] },
+    { id: 'flavor', label: 'Flavor', value: flavorFilter, set: setFlavorFilter,
+      opts: [
+        { label: 'Sweet', value: 'sweet' }, { label: 'Salty', value: 'salty' },
+        { label: 'Sour', value: 'sour' }, { label: 'Bitter', value: 'bitter' },
+        { label: 'Umami', value: 'umami' },
+      ] },
+  ];
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   return (
-    <div style={{ paddingTop: 2 }}>
-      <Row active={textureFilter} onSelect={setTextureFilter} options={[
-        { value: 'crunchy', label: 'Crunchy' }, { value: 'crispy', label: 'Crispy' },
-        { value: 'soft',    label: 'Soft'    }, { value: 'creamy', label: 'Creamy' },
-        { value: 'chewy',   label: 'Chewy'   }, { value: 'smooth', label: 'Smooth' },
-        { value: 'fluffy',  label: 'Fluffy'  }, { value: 'juicy',  label: 'Juicy'  },
-        { value: 'firm',    label: 'Firm'    }, { value: 'sticky', label: 'Sticky' },
-      ]} />
-      <Row active={tempFilter} onSelect={setTempFilter} options={[
-        { value: 'hot',    label: 'Hot'      }, { value: 'cold',   label: 'Cold'   },
-        { value: 'room',   label: 'Room Temp' }, { value: 'frozen', label: 'Frozen' },
-      ]} />
-      <Row active={typeFilter} onSelect={setTypeFilter} options={[
-        { value: 'fruit',   label: 'Fruit'   }, { value: 'veggies', label: 'Veggies' },
-        { value: 'protein', label: 'Protein' }, { value: 'dairy',   label: 'Dairy'   },
-        { value: 'grains',  label: 'Grains'  }, { value: 'treats',  label: 'Sweets & Snacks'  },
-      ]} />
-      {hasAny && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -2, paddingBottom: 6 }}>
-          <button onClick={() => { setTextureFilter(null); setTempFilter(null); setTypeFilter(null); }}
-            style={{ border: 'none', background: 'transparent', fontFamily: careFont, fontSize: 11, fontWeight: 600, color: CARE_COLORS.muted, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
-            Clear filters
+    <div ref={ref} style={{ position: 'relative', marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {CATS.map(cat => (
+          <button key={cat.id}
+            onClick={() => setOpen(o => o === cat.id ? null : cat.id)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '6px 11px', borderRadius: 999, outline: 'none', cursor: 'pointer',
+              border: cat.value ? `1.5px solid ${CARE_COLORS.sageDeep}` : `1px solid ${CARE_COLORS.line}`,
+              background: cat.value ? CARE_COLORS.sageSoft : '#fff',
+              color: cat.value ? CARE_COLORS.sageDeep : CARE_COLORS.muted,
+              fontFamily: careFont, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+            }}>
+            {cat.value ? `${cat.label}: ${cap(cat.value)}` : cat.label}
+            <svg width="9" height="6" viewBox="0 0 9 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+              style={{ transform: open === cat.id ? 'rotate(180deg)' : 'none', transition: 'transform .15s', flexShrink: 0 }}>
+              <path d="M1 1l3.5 3.5L8 1"/>
+            </svg>
           </button>
+        ))}
+        {hasAny && (
+          <button
+            onClick={() => { setTextureFilter(null); setTempFilter(null); setTypeFilter(null); setFlavorFilter(null); setOpen(null); }}
+            style={{ padding: '5px 8px', border: 'none', background: 'transparent', fontFamily: careFont, fontSize: 11, fontWeight: 600, color: CARE_COLORS.muted, cursor: 'pointer', textDecoration: 'underline', outline: 'none' }}>
+            Clear
+          </button>
+        )}
+      </div>
+      {CATS.map(cat => open === cat.id && (
+        <div key={cat.id} style={{
+          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 300,
+          background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.line}`,
+          boxShadow: '0 8px 28px rgba(0,0,0,.14)', padding: '12px 14px', minWidth: 220,
+        }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {cat.opts.map(opt => (
+              <button key={opt.value}
+                onClick={() => { const next = cat.value === opt.value ? null : opt.value; cat.set(next); if (next) window.pypTrack('filter_applied', { filter_type: cat.id, value: next }); setOpen(null); }}
+                style={{
+                  padding: '5px 13px', borderRadius: 999, outline: 'none', cursor: 'pointer',
+                  border: cat.value === opt.value ? `1.5px solid ${CARE_COLORS.sageDeep}` : `1px solid ${CARE_COLORS.line}`,
+                  background: cat.value === opt.value ? CARE_COLORS.sageSoft : '#fff',
+                  color: cat.value === opt.value ? CARE_COLORS.sageDeep : CARE_COLORS.ink,
+                  fontFamily: careFont, fontSize: 13, fontWeight: 600,
+                }}>{opt.label}</button>
+            ))}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -1244,6 +1376,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
   const [textureFilter, setTextureFilter] = React.useState(null);
   const [tempFilter, setTempFilter] = React.useState(null);
   const [typeFilter, setTypeFilter] = React.useState(null);
+  const [flavorFilter, setFlavorFilter] = React.useState(null);
   const [saveName, setSaveName] = React.useState('');
   const [menuSaved, setMenuSaved] = React.useState(false);
   const [nudgeDismissed, setNudgeDismissed] = React.useState(false);
@@ -1256,7 +1389,8 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
   const [storeTextureF, setStoreTextureF] = React.useState(null);
   const [storeTempF, setStoreTempF] = React.useState(null);
   const [storeTypeF, setStoreTypeF] = React.useState(null);
-  const closeStoreOverlay = () => { setStoreOverlayOpen(false); setStoreQuery(''); setStoreFiltersOpen(false); setStoreTextureF(null); setStoreTempF(null); setStoreTypeF(null); };
+  const [storeFlavorF, setStoreFlavorF] = React.useState(null);
+  const closeStoreOverlay = () => { setStoreOverlayOpen(false); setStoreQuery(''); setStoreFiltersOpen(false); setStoreTextureF(null); setStoreTempF(null); setStoreTypeF(null); setStoreFlavorF(null); };
   const [storeToast, setStoreToast] = React.useState('');
   const [storeToastOn, setStoreToastOn] = React.useState(false);
   const storeToastRef = React.useRef(null);
@@ -1295,7 +1429,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
     return [...xs, id];
   });
   const mealLabel = meals.find(m => m.id === meal)?.label || 'Lunch';
-  const handleSave = () => { lastSentMenuRef.current = [...menu]; setSaved(true); setMenuSaved(false); setNudgeDismissed(false); onSendMenu && onSendMenu({ items: menu, plateType, mealLabel }); };
+  const handleSave = () => { lastSentMenuRef.current = [...menu]; setSaved(true); setMenuSaved(false); setNudgeDismissed(false); window.pypTrack('menu_sent', { food_count: menu.length, meal_label: mealLabel, plate_type: plateType, food_ids: menu }); onSendMenu && onSendMenu({ items: menu, plateType, mealLabel }); };
   const switchMeal = (m) => {
     if (m.id === meal) return;
     if (menu.length > 0) { setPendingMeal(m); return; }
@@ -1334,9 +1468,9 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
         </div>
         <div style={{ background: '#fff', borderRadius: 16, padding: 12, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 56, marginTop: 14 }}>
           {menu.length === 0 && (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0 4px', gap: 4 }}>
-              <PlateHero size={72} />
-              <div style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont, fontWeight: 500 }}>Tap to build today's menu.</div>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0 8px', gap: 10 }}>
+              <img src="./platey_home_transparent.png" width={140} style={{ display: 'block', transformOrigin: '50% 75%', animation: 'ppWelcomeWave 2.4s ease-in-out 2' }} />
+              <div style={{ fontSize: 15, color: CARE_COLORS.mutedStrong, fontFamily: careFont, fontWeight: 600 }}>Tap to build today's menu.</div>
             </div>
           )}
           {menu.map(id => <FoodChip key={id} id={id} onRemove={() => toggleFood(id)} />)}
@@ -1354,8 +1488,8 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
               ⚠ Menu is full — remove a food to add more
             </div>
           )}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 2 : 0 }}>
-            <button onClick={() => setKitchenOpen(true)} style={{ padding: '8px 20px', background: CARE_COLORS.sageDeep, border: 'none', borderRadius: 899, cursor: 'pointer', fontFamily: careFont, fontSize: 14, fontWeight: 600, color: '#fbf6ea', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: menu.length > 0 ? 2 : 8 }}>
+            <button onClick={() => setKitchenOpen(true)} style={{ padding: '13px 32px', background: CARE_COLORS.sageDeep, border: 'none', borderRadius: 899, cursor: 'pointer', fontFamily: careFont, fontSize: 16, fontWeight: 700, color: '#fbf6ea', boxShadow: '0 6px 22px rgba(40,80,40,.22)', animation: menu.length === 0 ? 'ppButtonBounce 2.5s ease-in-out 2' : 'none' }}>
               Kitchen
             </button>
           </div>
@@ -1382,7 +1516,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
         )}
         {menu.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <button onClick={handleSave} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, background: saved ? '#8BBF6A' : CARE_COLORS.sageDeep, color: '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)', transition: 'background .2s', animation: saved ? 'ppButtonBounce .5s cubic-bezier(.2,.8,.3,1.2)' : 'none', touchAction: 'manipulation' }}>
+            <button onClick={handleSave} style={{ width: '100%', border: saved ? `1.5px solid ${CARE_COLORS.sage}` : 'none', padding: '16px', borderRadius: 12, background: saved ? CARE_COLORS.sageSoft : CARE_COLORS.sageDeep, color: saved ? CARE_COLORS.sageDeep : '#fbf6ea', fontFamily: careFont, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: saved ? 'none' : '0 4px 14px rgba(40,80,40,.15)', transition: 'background .2s, color .2s, border-color .2s', animation: saved ? 'ppButtonBounce .5s cubic-bezier(.2,.8,.3,1.2)' : 'none', touchAction: 'manipulation' }}>
               {saved ? `✓ Menu sent` : `Send ${childName ? `${childName}'s ` : ''}Menu`}
             </button>
           </div>
@@ -1452,12 +1586,12 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                 <input value={kitchenQuery} onChange={e => setKitchenQuery(e.target.value)} placeholder="Search kitchen…" style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink }} />
                 {kitchenQuery && <div onClick={() => setKitchenQuery('')} style={{ color: CARE_COLORS.muted, cursor: 'pointer', fontSize: 16, lineHeight: 1, marginTop: -1 }}>×</div>}
               </div>
-              <PillFilterRows textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />
+              <FilterDropdowns textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} flavorFilter={flavorFilter} setFlavorFilter={setFlavorFilter} />
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 32px' }}>
               {(() => {
                 const q = kitchenQuery.trim().toLowerCase();
-                const hasFilter = q || textureFilter || tempFilter || typeFilter;
+                const hasFilter = q || textureFilter || tempFilter || typeFilter || flavorFilter;
                 const filterIds = (ids) => ids.filter(id => {
                   if (q && !FOOD_CATALOG[id]?.name.toLowerCase().includes(q)) return false;
                   const meta = FOOD_META[id];
@@ -1465,6 +1599,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                     if (textureFilter && !meta.textures.includes(textureFilter)) return false;
                     if (tempFilter && !meta.temps.includes(tempFilter)) return false;
                     if (typeFilter && meta.type !== typeFilter) return false;
+                    if (flavorFilter && !(meta.flavors||[]).includes(flavorFilter)) return false;
                   }
                   return true;
                 });
@@ -1503,7 +1638,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                   </div>
                 );});
               })()}
-              <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); setStoreOverlayOpen(true); }} style={{ marginTop: 14, width: '100%', border: `2px dashed ${CARE_COLORS.sageDeep}`, background: CARE_COLORS.sageSoft, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontWeight: 700, fontSize: 14, borderRadius: 12, padding: '12px', cursor: 'pointer' }}>
+              <button onClick={() => { setKitchenOpen(false); setKitchenQuery(''); setStoreOverlayOpen(true); window.pypTrack('store_opened'); }} style={{ marginTop: 14, width: '100%', border: `2px dashed ${CARE_COLORS.sageDeep}`, background: CARE_COLORS.sageSoft, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontWeight: 700, fontSize: 14, borderRadius: 12, padding: '12px', cursor: 'pointer' }}>
                 + Add a food from the store
               </button>
             </div>
@@ -1537,7 +1672,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
             </div>
             {storeFiltersOpen && (
               <div style={{ padding: '0 20px 6px', flexShrink: 0 }}>
-                <PillFilterRows textureFilter={storeTextureF} setTextureFilter={setStoreTextureF} tempFilter={storeTempF} setTempFilter={setStoreTempF} typeFilter={storeTypeF} setTypeFilter={setStoreTypeF} />
+                <FilterDropdowns textureFilter={storeTextureF} setTextureFilter={setStoreTextureF} tempFilter={storeTempF} setTempFilter={setStoreTempF} typeFilter={storeTypeF} setTypeFilter={setStoreTypeF} flavorFilter={storeFlavorF} setFlavorFilter={setStoreFlavorF} />
               </div>
             )}
             <div style={{ position: 'relative', flex: 1, overflow: 'auto', padding: '8px 20px 80px' }}>
@@ -1554,6 +1689,7 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
                     if (storeTextureF && !meta.textures.includes(storeTextureF)) return false;
                     if (storeTempF && !meta.temps.includes(storeTempF)) return false;
                     if (storeTypeF && meta.type !== storeTypeF) return false;
+                    if (storeFlavorF && !(meta.flavors||[]).includes(storeFlavorF)) return false;
                   }
                   return true;
                 });
@@ -1585,24 +1721,42 @@ function CareToday({ childName = '', savedMenus = [], kitchenIds = [], menu = []
   );
 }
 
-function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLabel = 'Lunch', sentMenuItems = [], savedMenus = [] }) {
+function CareNotification({ childName = '', pickedPlate, onSaveMenu, onRecordPlate, sentMealLabel = 'Lunch', sentMenuItems = [], savedMenus = [], plateHistory = [] }) {
   const [saved, setSaved] = React.useState(false);
   const [naming, setNaming] = React.useState(false);
   const [menuName, setMenuName] = React.useState('');
+  const [triesExpanded, setTriesExpanded] = React.useState(false);
   const NAME_LIMIT = 30;
 
   const pickedFoodIds = pickedPlate ? [...new Set(pickedPlate.items.map(it => it.id))] : [];
   const [firstTries, setFirstTries] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('pyp_child_first_tries') || '[]'); } catch { return []; }
   });
+  const [hasPlatedBefore, setHasPlatedBefore] = React.useState(() => localStorage.getItem('pyp_has_plated_before') === 'true');
   React.useEffect(() => {
     if (!pickedPlate || pickedFoodIds.length === 0) return;
     const knownIds = new Set(firstTries.map(e => e.foodId));
     const additions = pickedFoodIds.filter(id => !knownIds.has(id)).map(id => ({ foodId: id, timestamp: pickedPlate.submittedAt || Date.now() }));
-    if (!additions.length) return;
-    const updated = [...firstTries, ...additions];
-    localStorage.setItem('pyp_child_first_tries', JSON.stringify(updated));
-    setFirstTries(updated);
+    if (additions.length) {
+      const updated = [...firstTries, ...additions];
+      localStorage.setItem('pyp_child_first_tries', JSON.stringify(updated));
+      setFirstTries(updated);
+      additions.forEach(a => window.pypTrack('first_try_recorded', { food_id: a.foodId, food_name: FOOD_CATALOG[a.foodId]?.name }));
+    }
+    if (!hasPlatedBefore) {
+      localStorage.setItem('pyp_has_plated_before', 'true');
+      setHasPlatedBefore(true);
+    }
+    if (onRecordPlate) {
+      const offeredIds = sentMenuItems.length > 0 ? [...new Set(sentMenuItems)] : pickedFoodIds;
+      onRecordPlate({
+        submittedAt: pickedPlate.submittedAt || Date.now(),
+        childIds: pickedFoodIds,
+        foodIds: offeredIds,
+        plateType: pickedPlate.plateType || 'basic',
+        meal: sentMealLabel,
+      });
+    }
   }, [pickedPlate]);
 
   if (!pickedPlate) {
@@ -1626,7 +1780,7 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
     ? new Date(pickedPlate.submittedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : null;
 
-  const historicalFoods = new Set(savedMenus.flatMap(m => m.ids));
+  const historicalFoods = new Set(plateHistory.flatMap(h => h.childIds || []));
   const familiarFoods = pickedFoodIds.filter(id => historicalFoods.has(id));
   const newFoods = pickedFoodIds.filter(id => !historicalFoods.has(id));
   const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
@@ -1643,10 +1797,14 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
   const mostRecentEntry = firstTries.length ? firstTries.reduce((a, b) => a.timestamp > b.timestamp ? a : b) : null;
 
   let headline, subline, insightTag;
-  if (savedMenus.length === 0) {
+  if (!hasPlatedBefore) {
     headline = `${childName || 'Your child'} built their first plate.`;
     subline = `${pickedFoodIds.length} ${pickedFoodIds.length === 1 ? 'food' : 'foods'} chosen.`;
     insightTag = 'First plate';
+  } else if (plateHistory.length === 0) {
+    headline = `${childName || 'Your child'} picked their plate.`;
+    subline = `${pickedFoodIds.length} ${pickedFoodIds.length === 1 ? 'food' : 'foods'} chosen.`;
+    insightTag = null;
   } else if (newFoods.length > 0 && familiarFoods.length > 0) {
     headline = `${familiarFoods.length} familiar, ${newFoods.length} new.`;
     subline = `First time with ${nameList(newFoods)}.`;
@@ -1674,12 +1832,12 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
           </div>
         </div>
         <div style={{ marginTop: 22, padding: 24, background: '#fff', borderRadius: 20, border: `1px solid ${CARE_COLORS.lineSoft}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ position: 'relative', width: 220, height: 220 }}>
+          <div style={{ position: 'relative', width: 154, height: 154 }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, #fff, #ffffff 55%, #e4e4e4 100%)`, boxShadow: '0 6px 22px rgba(60,40,20,.1), inset 0 2px 0 rgba(255,255,255,.6)' }} />
             <PlateShape type={plateType} plateColor="#ffffff" rimColor="#e4e4e4" />
             {items.map(it => (
               <div key={it.uid} style={{ position: 'absolute', left: `${it.x}%`, top: `${it.y}%`, transform: 'translate(-50%, -50%)' }}>
-                <FoodImage id={it.id} size={72} />
+                <FoodImage id={it.id} size={50} />
               </div>
             ))}
           </div>
@@ -1688,57 +1846,8 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
             {pickedFoodIds.map(id => <span key={id} style={{ fontSize: 13, fontWeight: 600, color: CARE_COLORS.ink, padding: '4px 10px', borderRadius: 899, background: CARE_COLORS.surface }}>{FOOD_CATALOG[id]?.name}</span>)}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: CARE_COLORS.sageSoft, borderRadius: 12, marginTop: 4 }}>
-          <img src="./platey_home_transparent.png" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 13, color: CARE_COLORS.sageDeep, lineHeight: 1.5, fontFamily: careFont, fontWeight: 500 }}>
-            {newFoods.length > 0 && familiarFoods.length > 0
-              ? "You've been offering a nice mix of familiar and new — that's exactly how comfort with food grows."
-              : newFoods.length > 0
-              ? "All new foods today — consider pairing with something familiar next time to keep it low-stress."
-              : "Staying with familiar foods is totally valid. Consistency builds trust over time."}
-          </p>
-        </div>
-        {pickedFoodIds.length > 0 && (() => {
-          const allChildIds = [...pickedFoodIds, ...savedMenus.flatMap(m => m.childIds || [])];
-          const total = allChildIds.length;
-          const counts = {};
-          allChildIds.forEach(id => { const meta = FOOD_META[id]; if (meta) meta.textures.forEach(t => { counts[t] = (counts[t]||0)+1; }); });
-          const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
-          if (!entries.length) return null;
-          return (
-            <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 12, fontFamily: careFont }}>Texture patterns · child selections</div>
-              {entries.map(([texture, count]) => (
-                <div key={texture} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 68, fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, fontFamily: careFont, textTransform: 'capitalize', flexShrink: 0 }}>{texture}</div>
-                  <div style={{ flex: 1, height: 6, background: CARE_COLORS.lineSoft, borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.round((count/total)*100)}%`, height: '100%', background: CARE_COLORS.sageDeep, borderRadius: 3 }} />
-                  </div>
-                  <div style={{ width: 24, fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, textAlign: 'right', flexShrink: 0 }}>{count}</div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-        <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont }}>First tries</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 28, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont, letterSpacing: -.5, lineHeight: 1 }}>{firstTries.length}</span>
-            <span style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>since {childName || 'they'} started</span>
-          </div>
-          {thisWeekCount > 0 && (
-            <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, marginTop: 4 }}>
-              <span style={{ fontWeight: 600, color: CARE_COLORS.sageDeep }}>{thisWeekCount}</span> this week
-            </div>
-          )}
-          {mostRecentEntry && FOOD_CATALOG[mostRecentEntry.foodId] && (
-            <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CARE_COLORS.lineSoft}` }}>
-              Most recent: <span style={{ fontWeight: 600, color: CARE_COLORS.ink }}>{FOOD_CATALOG[mostRecentEntry.foodId].name}</span> · {relativeTime(mostRecentEntry.timestamp)}
-            </div>
-          )}
-        </div>
         {saved ? (
-          <div style={{ width: '100%', marginTop: 8, padding: '13px', borderRadius: 12, background: '#8BBF6A', color: '#fbf6ea', fontFamily: careFont, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+          <div style={{ marginTop: 8, padding: '12px 14px', borderRadius: 12, background: '#8BBF6A', color: '#fbf6ea', fontFamily: careFont, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 7 }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 3"/></svg>Saved as "{menuName}"
           </div>
         ) : naming ? (
@@ -1751,16 +1860,202 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
               autoFocus
               value={menuName}
               onChange={e => setMenuName(e.target.value.slice(0, NAME_LIMIT))}
-              onKeyDown={e => { if (e.key === 'Enter' && menuName.trim()) { setSaved(true); setNaming(false); onSaveMenu && onSaveMenu({ name: menuName.trim(), meal: sentMealLabel, ids: foodIds, childIds: pickedFoodIds }); } if (e.key === 'Escape') setNaming(false); }}
+              onKeyDown={e => { if (e.key === 'Enter' && menuName.trim()) { setSaved(true); setNaming(false); window.pypTrack('menu_saved', { menu_name: menuName.trim(), meal: sentMealLabel, food_count: foodIds.length }); onSaveMenu && onSaveMenu({ name: menuName.trim(), meal: sentMealLabel, ids: foodIds, childIds: [] }); } if (e.key === 'Escape') setNaming(false); }}
               placeholder={`${childName ? `${childName}'s ` : ''}${sentMealLabel}`}
               style={{ border: `1px solid ${CARE_COLORS.line}`, borderRadius: 8, padding: '10px 12px', fontFamily: careFont, fontSize: 14, color: CARE_COLORS.ink, outline: 'none', width: '100%', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setNaming(false)} style={{ flex: 1, border: `1px solid ${CARE_COLORS.line}`, padding: '10px', borderRadius: 10, background: 'none', fontFamily: careFont, fontSize: 13, fontWeight: 600, color: CARE_COLORS.muted, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => { const n = menuName.trim() || `${childName ? `${childName}'s ` : ''}${sentMealLabel}`; setMenuName(n); setSaved(true); setNaming(false); onSaveMenu && onSaveMenu({ name: n, meal: sentMealLabel, ids: foodIds, childIds: pickedFoodIds }); }} style={{ flex: 2, border: 'none', padding: '10px', borderRadius: 10, background: CARE_COLORS.sageDeep, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: '#fbf6ea', cursor: 'pointer' }}>Save</button>
+              <button onClick={() => { const n = menuName.trim() || `${childName ? `${childName}'s ` : ''}${sentMealLabel}`; setMenuName(n); setSaved(true); setNaming(false); window.pypTrack('menu_saved', { menu_name: n, meal: sentMealLabel, food_count: foodIds.length }); onSaveMenu && onSaveMenu({ name: n, meal: sentMealLabel, ids: foodIds, childIds: [] }); }} style={{ flex: 2, border: 'none', padding: '10px', borderRadius: 10, background: CARE_COLORS.sageDeep, fontFamily: careFont, fontSize: 13, fontWeight: 600, color: '#fbf6ea', cursor: 'pointer' }}>Save</button>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <button onClick={() => setNaming(true)} style={{ marginTop: 8, width: '100%', padding: '11px', borderRadius: 12, border: `1.5px solid ${CARE_COLORS.sageDeep}`, background: CARE_COLORS.sageSoft, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
+            Save this menu
+          </button>
+        )}
+        {foodIds.length > 0 && (() => {
+          const notChosen = foodIds.filter(id => !pickedFoodIds.includes(id));
+          const pct = Math.round((pickedFoodIds.length / foodIds.length) * 100);
+          return (
+            <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont }}>Offered vs Chosen</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                {foodIds.map(id => {
+                  const chosen = pickedFoodIds.includes(id);
+                  return <span key={id} style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: chosen ? CARE_COLORS.sageSoft : CARE_COLORS.lineSoft, color: chosen ? CARE_COLORS.sageDeep : CARE_COLORS.muted, textDecoration: chosen ? 'none' : 'line-through', textDecorationColor: '#bbb' }}>{FOOD_CATALOG[id]?.name}</span>;
+                })}
+              </div>
+              <div style={{ background: CARE_COLORS.lineSoft, borderRadius: 999, height: 6, overflow: 'hidden', marginBottom: 5 }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: CARE_COLORS.sageDeep, borderRadius: 999, transition: 'width .4s ease' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: CARE_COLORS.muted }}>
+                <span><span style={{ color: CARE_COLORS.sageDeep, fontWeight: 800 }}>{pickedFoodIds.length} of {foodIds.length}</span> chosen</span>
+                <span>{pct}% acceptance</span>
+              </div>
+            </div>
+          );
+        })()}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: CARE_COLORS.sageSoft, borderRadius: 12, marginTop: 4 }}>
+          <img src="./platey_home_transparent.png" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: 13, color: CARE_COLORS.sageDeep, lineHeight: 1.5, fontFamily: careFont, fontWeight: 500 }}>
+            {newFoods.length > 0 && familiarFoods.length > 0
+              ? "You've been offering a nice mix of familiar and new — that's exactly how comfort with food grows."
+              : newFoods.length > 0
+              ? "All new foods today — consider pairing with something familiar next time to keep it low-stress."
+              : "Staying with familiar foods is totally valid. Consistency builds trust over time."}
+          </p>
+        </div>
+        {pickedFoodIds.length > 0 && (() => {
+          const allChildIds = [...new Set([...pickedFoodIds, ...plateHistory.flatMap(h => h.childIds || [])])];
+          const counts = {};
+          allChildIds.forEach(id => { const meta = FOOD_META[id]; if (meta) meta.textures.forEach(t => { counts[t] = (counts[t]||0)+1; }); });
+          const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+          if (!entries.length) return null;
+          const PIE_COLORS = ['#6B9E52','#38B9C7','#F5654D','#E09A20','#9B72CF'];
+          const entryTotal = entries.reduce((s,[,c]) => s+c, 0);
+          let angle = -Math.PI / 2;
+          const slices = entries.map(([label, count], i) => {
+            const frac = count / entryTotal;
+            const sweep = frac * 2 * Math.PI;
+            const a0 = angle, a1 = angle + sweep;
+            angle = a1;
+            const cx=45, cy=45, R=38, ri=18;
+            const x0=cx+R*Math.cos(a0), y0=cy+R*Math.sin(a0);
+            const x1=cx+R*Math.cos(a1), y1=cy+R*Math.sin(a1);
+            const ix0=cx+ri*Math.cos(a0), iy0=cy+ri*Math.sin(a0);
+            const ix1=cx+ri*Math.cos(a1), iy1=cy+ri*Math.sin(a1);
+            const large = sweep > Math.PI ? 1 : 0;
+            const d = `M${ix0} ${iy0} L${x0} ${y0} A${R} ${R} 0 ${large} 1 ${x1} ${y1} L${ix1} ${iy1} A${ri} ${ri} 0 ${large} 0 ${ix0} ${iy0}Z`;
+            return { label, frac, d, color: PIE_COLORS[i] };
+          });
+          return (
+            <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 12, fontFamily: careFont }}>Texture patterns · all selections</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <svg width="90" height="90" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
+                  {slices.map((s,i) => <path key={i} d={s.d} fill={s.color} />)}
+                </svg>
+                <div style={{ flex: 1 }}>
+                  {slices.map((s,i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                      <div style={{ width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+                      <div style={{ fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, textTransform: 'capitalize', flex: 1, fontFamily: careFont }}>{s.label}</div>
+                      <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, fontFamily: careFont }}>{Math.round(s.frac*100)}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        {pickedFoodIds.length > 0 && (() => {
+          const allChildIds = [...new Set([...pickedFoodIds, ...plateHistory.flatMap(h => h.childIds || [])])];
+          const flavorCounts = {};
+          allChildIds.forEach(id => { const meta = FOOD_META[id]; if (meta) (meta.flavors||[]).forEach(f => { flavorCounts[f] = (flavorCounts[f]||0)+1; }); });
+          const FLAVOR_COLORS = { sweet: '#F7A35C', salty: '#5B8DEF', sour: '#E6D531', bitter: '#6B9E52', umami: '#9B72CF' };
+          const fentries = Object.entries(flavorCounts).sort((a,b) => b[1]-a[1]);
+          if (!fentries.length) return null;
+          const ftotal = fentries.reduce((s,[,c]) => s+c, 0);
+          let fangle = -Math.PI / 2;
+          const fslices = fentries.map(([label, count]) => {
+            const frac = count / ftotal;
+            const sweep = frac * 2 * Math.PI;
+            const a0 = fangle, a1 = fangle + sweep;
+            fangle = a1;
+            const cx=45, cy=45, R=38, ri=18;
+            const x0=cx+R*Math.cos(a0), y0=cy+R*Math.sin(a0);
+            const x1=cx+R*Math.cos(a1), y1=cy+R*Math.sin(a1);
+            const ix0=cx+ri*Math.cos(a0), iy0=cy+ri*Math.sin(a0);
+            const ix1=cx+ri*Math.cos(a1), iy1=cy+ri*Math.sin(a1);
+            const large = sweep > Math.PI ? 1 : 0;
+            const d = `M${ix0} ${iy0} L${x0} ${y0} A${R} ${R} 0 ${large} 1 ${x1} ${y1} L${ix1} ${iy1} A${ri} ${ri} 0 ${large} 0 ${ix0} ${iy0}Z`;
+            return { label, frac, d, color: FLAVOR_COLORS[label] || '#ccc' };
+          });
+          return (
+            <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 12, fontFamily: careFont }}>Flavor profile · all selections</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <svg width="90" height="90" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
+                  {fslices.map((s,i) => <path key={i} d={s.d} fill={s.color} />)}
+                </svg>
+                <div style={{ flex: 1 }}>
+                  {fslices.map((s,i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                      <div style={{ width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+                      <div style={{ fontSize: 12, fontWeight: 600, color: CARE_COLORS.ink, textTransform: 'capitalize', flex: 1, fontFamily: careFont }}>{s.label}</div>
+                      <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontWeight: 600, fontFamily: careFont }}>{Math.round(s.frac*100)}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        <div onClick={() => firstTries.length > 0 && setTriesExpanded(x => !x)} style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}`, cursor: firstTries.length > 0 ? 'pointer' : 'default' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 6, fontFamily: careFont }}>First tries</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont, letterSpacing: -.5, lineHeight: 1 }}>{firstTries.length}</span>
+                <span style={{ fontSize: 13, color: CARE_COLORS.muted, fontFamily: careFont }}>since {childName || 'they'} started</span>
+              </div>
+              {thisWeekCount > 0 && <div style={{ fontSize: 12, color: CARE_COLORS.muted, fontFamily: careFont, marginTop: 4 }}><span style={{ fontWeight: 600, color: CARE_COLORS.sageDeep }}>{thisWeekCount}</span> this week</div>}
+            </div>
+            {firstTries.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {mostRecentEntry && FOOD_CATALOG[mostRecentEntry.foodId] && !triesExpanded && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: CARE_COLORS.muted, fontWeight: 600, marginBottom: 2 }}>Most recent</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: CARE_COLORS.ink, fontFamily: careFont }}>{FOOD_CATALOG[mostRecentEntry.foodId].name}</div>
+                    <div style={{ fontSize: 11, color: CARE_COLORS.muted }}>{relativeTime(mostRecentEntry.timestamp)}</div>
+                  </div>
+                )}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={CARE_COLORS.muted} strokeWidth="2" strokeLinecap="round" style={{ transform: triesExpanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s', flexShrink: 0, marginTop: 2 }}><path d="M4 6l4 4 4-4"/></svg>
+              </div>
+            )}
+          </div>
+          {triesExpanded && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${CARE_COLORS.lineSoft}` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: .08, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 8, fontFamily: careFont }}>Most recent first</div>
+              {[...firstTries].sort((a,b) => b.timestamp - a.timestamp).map((e, i, arr) => FOOD_CATALOG[e.foodId] && (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: i < arr.length - 1 ? 7 : 0, marginBottom: i < arr.length - 1 ? 7 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${CARE_COLORS.lineSoft}` : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: CARE_COLORS.sageDeep, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont }}>{FOOD_CATALOG[e.foodId].name}</span>
+                  </div>
+                  <span style={{ fontSize: 11, color: CARE_COLORS.muted, fontFamily: careFont }}>{relativeTime(e.timestamp)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {plateHistory.length > 0 && (
+          <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 14, border: `1px solid ${CARE_COLORS.lineSoft}` }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .8, textTransform: 'uppercase', color: CARE_COLORS.muted, marginBottom: 10, fontFamily: careFont }}>Plate history</div>
+            {[...plateHistory].reverse().slice(0, 6).map((h, i, arr) => {
+              const date = h.submittedAt ? new Date(h.submittedAt) : null;
+              const dateLabel = date ? date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) : h.meal || '';
+              const timeLabel = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+              const foodNames = (h.childIds || []).map(id => FOOD_CATALOG[id]?.name).filter(Boolean).join(', ');
+              return (
+                <div key={h.submittedAt || i} style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: i < arr.length - 1 ? 10 : 0, marginBottom: i < arr.length - 1 ? 10 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${CARE_COLORS.lineSoft}` : 'none' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, border: `1.5px solid ${CARE_COLORS.sageDeep}`, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src="./platey_home_transparent.png" width={30} height={30} style={{ display: 'block', objectFit: 'contain' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: CARE_COLORS.ink, fontFamily: careFont }}>{dateLabel}</div>
+                      {timeLabel && <div style={{ fontSize: 11, color: CARE_COLORS.muted, fontFamily: careFont, flexShrink: 0 }}>{timeLabel}</div>}
+                    </div>
+                    {foodNames && <div style={{ fontSize: 11, color: CARE_COLORS.mutedStrong, fontFamily: careFont, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{foodNames}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1769,12 +2064,12 @@ function CareNotification({ childName = '', pickedPlate, onSaveMenu, sentMealLab
 const SAVED_MENUS_DATA = [];
 
 const CATALOG_CATS = [
-  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew', 'chickensandwich', 'fishsandwich', 'chili', 'salmon', 'meatballs', 'friedchicken'] },
-  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole', 'corn', 'salad', 'onionrings', 'pickle'] },
+  { label: 'Proteins',        ids: ['chicken', 'hotdog', 'ham', 'egg', 'friedegg', 'beans', 'tofu', 'fishstick', 'tuna', 'turkey', 'hummus', 'peanutbutter', 'sausage', 'bacon', 'burger', 'dumplings', 'sushi', 'cod', 'onigiri', 'corndog', 'scrambledegg', 'beefstew', 'chickensandwich', 'fishsandwich', 'chili', 'salmon', 'meatballs', 'friedchicken', 'toadinthehole', 'halloumifries'] },
+  { label: 'Vegetables',      ids: ['carrot', 'cucumber', 'cucumbersticks', 'broccoli', 'spinach', 'lettuce', 'peas', 'snappeas', 'tomato', 'sweetpotato', 'sweetpotatofries', 'pepper', 'celery', 'cauliflower', 'edamame', 'avocado', 'hashbrowns', 'coleslaw', 'guacamole', 'corn', 'salad', 'onionrings', 'pickle'] },
   { label: 'Fruit',           ids: ['apple', 'applesauce', 'grapes', 'orange', 'banana', 'strawberry', 'raspberries', 'berries', 'watermelon', 'peach', 'mango', 'pear', 'cherry', 'kiwi', 'pineapple', 'cantaloupe', 'honeydew', 'mandarin'] },
-  { label: 'Grains & Starch', ids: ['pasta', 'rice', 'fries', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'bagel', 'cinnamontoast', 'roll', 'spaghettios', 'grahams', 'mashedpotato', 'frenchtoast', 'tatertots', 'garlicbread', 'naan'] },
+  { label: 'Grains & Starch', ids: ['pasta', 'fusilli', 'shellpasta', 'spaghetti', 'rice', 'fries', 'crackers', 'potato', 'toast', 'cereal', 'bread', 'wrap', 'oatmeal', 'noodles', 'waffle', 'pancake', 'bagel', 'cinnamontoast', 'roll', 'spaghettios', 'grahams', 'mashedpotato', 'frenchtoast', 'tatertots', 'garlicbread', 'naan'] },
   { label: "Kid's Favorites", ids: ['mac', 'pizza', 'grilledcheese', 'quesadilla', 'pbj', 'friedrice', 'spagmeatballs', 'chickennoodlesoup', 'eggsandwich', 'chickenrice', 'turkeysandwich', 'hamsandwich', 'lasagna', 'ramen', 'eggroll', 'tacos', 'burrito', 'samosa'] },
-  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'popcorn', 'pretzel', 'granola', 'greekyogurt', 'icecream', 'applejuice', 'oj', 'creamcheese', 'nutella', 'pumpkinseeds', 'caprisun', 'hotchocolate', 'chocolatemilk', 'milkshake', 'soda'] },
+  { label: 'Dairy & Other',   ids: ['milk', 'yogurt', 'cheese', 'raisins', 'cottage', 'stringcheese', 'popcorn', 'pretzel', 'granola', 'greekyogurt', 'icecream', 'applejuice', 'oj', 'creamcheese', 'nutella', 'pumpkinseeds', 'caprisun', 'hotchocolate', 'chocolatemilk', 'milkshake', 'soda', 'blueslushie', 'mangoslushie'] },
   { label: 'Sweets & Snacks', ids: ['cookie', 'donut', 'goldfish', 'tortillachips', 'chips', 'fruitsnack', 'popsicle', 'nachos', 'poptart', 'jello', 'marshmallows', 'applepie', 'smores', 'oreo', 'cake'] },
 ];
 
@@ -1785,17 +2080,19 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
   const [textureFilter, setTextureFilter] = React.useState(null);
   const [tempFilter, setTempFilter] = React.useState(null);
   const [typeFilter, setTypeFilter] = React.useState(null);
+  const [flavorFilter, setFlavorFilter] = React.useState(null);
   const toggle = (id) => setKitchenFoods(xs => xs.includes(id) ? xs.filter(x => x !== id) : [...xs, id]);
   const newlyAdded = kitchenFoods.filter(id => !kitchenIds.includes(id));
 
   const q = query.trim().toLowerCase();
-  const hasMetaFilter = textureFilter || tempFilter || typeFilter;
+  const hasMetaFilter = textureFilter || tempFilter || typeFilter || flavorFilter;
   const filterByMeta = (ids) => ids.filter(id => {
     const meta = FOOD_META[id];
-    if (!meta) return !textureFilter && !tempFilter && !typeFilter;
+    if (!meta) return !textureFilter && !tempFilter && !typeFilter && !flavorFilter;
     if (textureFilter && !meta.textures.includes(textureFilter)) return false;
     if (tempFilter && !meta.temps.includes(tempFilter)) return false;
     if (typeFilter && meta.type !== typeFilter) return false;
+    if (flavorFilter && !(meta.flavors||[]).includes(flavorFilter)) return false;
     return true;
   });
 
@@ -1835,7 +2132,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
             </div>
           )}
         </div>
-        <PillFilterRows textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />
+        <FilterDropdowns textureFilter={textureFilter} setTextureFilter={setTextureFilter} tempFilter={tempFilter} setTempFilter={setTempFilter} typeFilter={typeFilter} setTypeFilter={setTypeFilter} flavorFilter={flavorFilter} setFlavorFilter={setFlavorFilter} />
 
         {/* Search results */}
         {(q || hasMetaFilter) ? (
@@ -1903,7 +2200,7 @@ function CareLibrary({ childName = '', savedMenus = [], kitchenIds = [], onAddTo
         )}
       </div>
       <div style={{ padding: '12px 20px 88px', flexShrink: 0, borderTop: `1px solid ${CARE_COLORS.lineSoft}`, background: CARE_COLORS.storeBg }}>
-        <button onClick={() => { onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
+        <button onClick={() => { if (newlyAdded.length) window.pypTrack('foods_added_to_kitchen', { food_ids: newlyAdded, food_count: newlyAdded.length, food_names: newlyAdded.map(id => FOOD_CATALOG[id]?.name).filter(Boolean) }); onAddToKitchen && onAddToKitchen(kitchenFoods); onAddToMenu && onAddToMenu(newlyAdded); onDone(); }} style={{ width: '100%', border: 'none', padding: '16px', borderRadius: 12, fontFamily: careFont, fontSize: 16, fontWeight: 600, background: CARE_COLORS.sageDeep, color: '#fbf6ea', cursor: 'pointer', boxShadow: '0 4px 14px rgba(40,80,40,.15)' }}>
           {newlyAdded.length > 0 ? `Stock · ${newlyAdded.length} ${newlyAdded.length === 1 ? 'food' : 'foods'}` : 'Done'}
         </button>
       </div>
@@ -1949,9 +2246,9 @@ function CareWelcome({ onStart }) {
 
   const steps = [
     { n: 1, color: '#19324A',  text: "Setup your kitchen to match what's at home.",              scene: './step1_scene.png', right: <img src="./phone_menu.png"         style={{ height: 88, display: 'block' }} /> },
-    { n: 2, color: TEAL,  text: 'Create a menu to share with your child.',                    scene: './step2_scene.png', right: <img src="./phone_menu_sent.png"    style={{ height: 88, display: 'block' }} /> },
+    { n: 2, color: TEAL,  text: 'Create a menu to share with your child.',                    scene: './step2_scene.png', right: <img src="./phone_send_menu.png"    style={{ height: 88, display: 'block' }} /> },
     { n: 3, color: GREEN, text: 'Your child selects from the menu and sends it back to you.', scene: './step3_scene.png', right: <img src="./phone_child_select.png" style={{ height: 82, display: 'block' }} /> },
-    { n: 4, color: CORAL, text: 'No fuss, no muss, time to eat!',                             scene: './step4_scene.png', right: <img src="./meal_plate.png"         style={{ height: 72, display: 'block' }} /> },
+    { n: 4, color: CORAL, text: 'Time to eat!',                                                  scene: './step4_scene.png', right: <img src="./meal_plate.png"         style={{ height: 72, display: 'block' }} /> },
   ];
 
   return (
@@ -1960,21 +2257,14 @@ function CareWelcome({ onStart }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 32px' }}>
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginTop: 0, marginBottom: -18 }}>
-          <img src="./pyp_logo.png" style={{ width: 170, display: 'inline-block' }} />
+        <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 14 }}>
+          <img src="./plateworks_logo_transparent.png" style={{ width: 165, display: 'inline-block' }} />
         </div>
 
-        {/* Intro text */}
-        <div style={{ textAlign: 'center', marginTop: 6, marginBottom: 14, padding: '0 8px' }}>
-          <p style={{ margin: 0, fontSize: 14, color: NAVY, lineHeight: 1.65, fontFamily: careFont }}>
-            More choice. Less stress. Better meals.
-          </p>
-        </div>
-
-        {/* HOW PYP WORKS */}
+        {/* HOW IT WORKS */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
           <svg width="26" height="11" viewBox="0 0 26 11" fill="none"><path d="M1 5.5h18M15 1.5l4 4-4 4" stroke={CORAL} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontSize: 11, fontWeight: 800, color: NAVY, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'Nunito, system-ui' }}>How PYP Works</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: NAVY, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'Nunito, system-ui' }}>How It Works</span>
           <svg width="26" height="11" viewBox="0 0 26 11" fill="none"><path d="M25 5.5H7M11 1.5L7 5.5l4 4" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
 
@@ -2002,12 +2292,12 @@ function CareWelcome({ onStart }) {
   );
 }
 
-function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap, savedMenus = [] }) {
+function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap, plateHistory = [] }) {
   const [dismissing, setDismissing] = React.useState(false);
 
   const items = pickedPlate?.items || [];
   const foodIds = [...new Set(items.map(it => it.id))];
-  const historicalFoods = new Set(savedMenus.flatMap(m => m.ids));
+  const historicalFoods = new Set(plateHistory.flatMap(h => h.childIds || []));
   const newFoods = foodIds.filter(id => !historicalFoods.has(id));
   const familiarFoods = foodIds.filter(id => historicalFoods.has(id));
   const nameList = ids => { const ns = ids.map(id => FOOD_CATALOG[id]?.name).filter(Boolean); return ns.length <= 2 ? ns.join(' and ') : ns.slice(0,-1).join(', ') + ' and ' + ns.slice(-1); };
@@ -2032,11 +2322,11 @@ function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap, savedMenus
       <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(20px)', borderRadius: 16, boxShadow: '0 8px 28px rgba(40,30,20,.16)', animation: 'notifSlideDown .38s cubic-bezier(.2,.9,.3,1)', transform: dismissing ? 'translateY(-80px)' : 'none', transition: dismissing ? 'transform .32s ease, opacity .32s' : 'none', opacity: dismissing ? 0 : 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 7, background: `radial-gradient(circle at 30% 30%, ${CARE_COLORS.sageSoft}, ${CARE_COLORS.sage})`, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="./pyp_logo.png" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+            <img src="./plateworks_icon.png" style={{ width: 26, height: 26, objectFit: 'contain' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont }}>Pick Your Plate</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: CARE_COLORS.ink, fontFamily: careFont }}>PlateWorks</span>
               <span style={{ fontSize: 12, color: CARE_COLORS.sageDeep, fontFamily: careFont, fontWeight: 600, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); dismiss(); onTap && onTap(); }}>View →</span>
             </div>
             <div style={{ fontSize: 14, color: CARE_COLORS.ink, fontWeight: 600, fontFamily: careFont }}>{headline}</div>
@@ -2048,10 +2338,11 @@ function AppleNotifBanner({ childName, pickedPlate, onDismiss, onTap, savedMenus
   );
 }
 
-function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, onNameChange, onReset, onNewMenu, standalone }) {
+function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, onNameChange, onReset, onNewMenu, onNewFamilyCode, standalone }) {
   const [screen, setScreen] = React.useState(() => localStorage.getItem('pyp_childName') ? 'today' : 'welcome');
   const [childName, setChildName] = React.useState(() => localStorage.getItem('pyp_childName') || propChildName);
   const [savedMenus, setSavedMenus] = React.useState(() => { try { const s = localStorage.getItem('pyp_savedMenus'); return s ? JSON.parse(s) : []; } catch { return []; } });
+  const [plateHistory, setPlateHistory] = React.useState(() => { try { const s = localStorage.getItem('pyp_plate_history'); return s ? JSON.parse(s) : []; } catch { return []; } });
   const [lastSeenPlate, setLastSeenPlate] = React.useState(null);
   const [kitchenIds, setKitchenIds] = React.useState(() => { try { const s = localStorage.getItem('pyp_kitchenIds'); const ids = s ? JSON.parse(s) : [...new Set(KITCHEN.flatMap(c => c.ids))]; return ids.filter(id => id !== 'spinach'); } catch { return [...new Set(KITCHEN.flatMap(c => c.ids))]; } });
   const [menu, setMenu] = React.useState([]);
@@ -2073,6 +2364,7 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
 
   React.useEffect(() => { localStorage.setItem('pyp_kitchenIds', JSON.stringify(kitchenIds)); }, [kitchenIds]);
   React.useEffect(() => { localStorage.setItem('pyp_savedMenus', JSON.stringify(savedMenus)); }, [savedMenus]);
+  React.useEffect(() => { localStorage.setItem('pyp_plate_history', JSON.stringify(plateHistory)); }, [plateHistory]);
 
   const addToKitchen = (ids) => setKitchenIds([...new Set(ids)]);
   const addToMenu = (ids) => setMenu(xs => [...new Set([...xs, ...ids])]);
@@ -2081,6 +2373,7 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
   const [lastSentMenuItems, setLastSentMenuItems] = React.useState([]);
   const hasUnseenActivity = pickedPlate !== null && pickedPlate !== lastSeenPlate;
   const addSavedMenu = (entry) => setSavedMenus(xs => [...xs, { id: Date.now(), ...entry }]);
+  const addPlateHistory = (entry) => setPlateHistory(xs => xs.some(h => h.submittedAt === entry.submittedAt) ? xs : [...xs, entry]);
   const goToActivity = () => { setLastSeenPlate(pickedPlate); setScreen('notification'); };
   const handleInternalSendMenu = (menuData) => { setLastSentMeal(menuData.mealLabel || 'Lunch'); setLastSentMenuItems(menuData.items || []); onSendMenu(menuData); };
   const content = (
@@ -2088,7 +2381,7 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
       {screen === 'welcome'      && <CareWelcome      onStart={handleWelcomeStart} />}
       {screen === 'setup'        && <CareSetup        onDone={handleNameSaved} />}
       {screen === 'today'        && <CareToday        childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} menu={menu} onSetMenu={setMenu} onSaved={goToActivity} onSendMenu={handleInternalSendMenu} onSaveMenu={addSavedMenu} onOpenPantry={() => setScreen('library')} onStockFood={(id) => setKitchenIds(xs => [...new Set([...xs, id])])} pickedPlate={pickedPlate} onViewActivity={goToActivity} openKitchen={pendingKitchenOpen} onKitchenOpened={() => setPendingKitchenOpen(false)} onNewMenu={onNewMenu} />}
-      {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} sentMealLabel={lastSentMeal} sentMenuItems={lastSentMenuItems} savedMenus={savedMenus} />}
+      {screen === 'notification' && <CareNotification childName={childName} pickedPlate={pickedPlate} onSaveMenu={addSavedMenu} onRecordPlate={addPlateHistory} sentMealLabel={lastSentMeal} sentMenuItems={lastSentMenuItems} savedMenus={savedMenus} plateHistory={plateHistory} />}
       {screen === 'library'      && <CareLibrary      childName={childName} savedMenus={savedMenus} kitchenIds={kitchenIds} onAddToKitchen={addToKitchen} onAddToMenu={(ids) => setMenu(xs => [...new Set([...xs, ...ids])])} onDone={() => { setPendingKitchenOpen(true); setScreen('today'); }} />}
       {settingsOpen && (
         <div onClick={() => setSettingsOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(40,30,20,.25)', display: 'flex', alignItems: 'flex-end' }}>
@@ -2096,14 +2389,36 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
             <div style={{ width: 36, height: 4, borderRadius: 2, background: CARE_COLORS.line, margin: '0 auto 20px' }} />
             <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -.3, marginBottom: 24 }}>Settings</div>
             <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06)', marginBottom: 16 }}>
-              <div style={{ padding: '16px 18px' }}>
+              <div style={{ padding: '16px 18px', borderBottom: `1px solid ${CARE_COLORS.line}` }}>
                 <div style={{ fontFamily: careFont, fontSize: 12, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 6 }}>Family Code</div>
-                <div style={{ fontFamily: careFont, fontSize: 28, fontWeight: 800, letterSpacing: 6, color: CARE_COLORS.ink }}>{localStorage.getItem('pyp_family_code') || '—'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ fontFamily: careFont, fontSize: 28, fontWeight: 800, letterSpacing: 6, color: CARE_COLORS.ink }}>{localStorage.getItem('pyp_family_code') || '—'}</div>
+                  <button onClick={() => {
+                    __getToken().then(token =>
+                      fetch('/api/create-session', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+                    ).then(({ code }) => {
+                      if (!code) return;
+                      const up = code.toUpperCase();
+                      localStorage.setItem('pyp_family_code', up);
+                      setSettingsOpen(false);
+                      onNewFamilyCode && onNewFamilyCode(up);
+                    }).catch(() => {});
+                  }} style={{ fontFamily: careFont, fontSize: 12, fontWeight: 700, color: CARE_COLORS.sageDeep, background: CARE_COLORS.sageSoft, border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}>New code</button>
+                </div>
                 <div style={{ fontFamily: careFont, fontSize: 12, color: CARE_COLORS.muted, marginTop: 4 }}>Enter this on your child's iPad to connect devices.</div>
+              </div>
+              <div style={{ padding: '14px 18px' }}>
+                <div style={{ fontFamily: careFont, fontSize: 12, fontWeight: 700, color: CARE_COLORS.muted, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 8 }}>Child's Name</div>
+                <input
+                  defaultValue={childName}
+                  placeholder="Enter child's first name"
+                  onBlur={e => { const n = e.target.value.trim(); if (n) { setChildName(n); localStorage.setItem('pyp_childName', n); onNameChange && onNameChange(n); } }}
+                  style={{ width: '100%', fontFamily: careFont, fontSize: 17, fontWeight: 600, color: CARE_COLORS.ink, border: 'none', borderBottom: `1px solid ${CARE_COLORS.line}`, background: 'transparent', outline: 'none', padding: '2px 0 6px', boxSizing: 'border-box' }}
+                />
               </div>
             </div>
             <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
-              <button onClick={() => { setSettingsOpen(false); localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); localStorage.removeItem('pyp_kitchenIds'); localStorage.removeItem('pyp_savedMenus'); setChildName(propChildName); setSavedMenus([]); setKitchenIds([...new Set(KITCHEN.flatMap(c => c.ids))]); setScreen('welcome'); onNameChange && onNameChange(null); onReset && onReset(); }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', background: 'none', border: 'none', borderBottom: `1px solid ${CARE_COLORS.line}`, cursor: 'pointer', fontFamily: careFont, fontSize: 15, color: CARE_COLORS.ink }}>
+              <button onClick={() => { setSettingsOpen(false); localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); localStorage.removeItem('pyp_kitchenIds'); localStorage.removeItem('pyp_savedMenus'); localStorage.removeItem('pyp_child_first_tries'); localStorage.removeItem('pyp_has_plated_before'); localStorage.removeItem('pyp_plate_history'); setChildName(propChildName); setSavedMenus([]); setPlateHistory([]); setKitchenIds([...new Set(KITCHEN.flatMap(c => c.ids))]); setScreen('welcome'); onNameChange && onNameChange(null); onReset && onReset(); }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', background: 'none', border: 'none', borderBottom: `1px solid ${CARE_COLORS.line}`, cursor: 'pointer', fontFamily: careFont, fontSize: 15, color: CARE_COLORS.ink }}>
                 <span>Reset child setup</span>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={CARE_COLORS.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5"/></svg>
               </button>
@@ -2112,7 +2427,7 @@ function CaretakerApp({ childName: propChildName = '', pickedPlate, onSendMenu, 
           </div>
         </div>
       )}
-      {showBanner && screen !== 'notification' && <AppleNotifBanner childName={childName} pickedPlate={pickedPlate} savedMenus={savedMenus} onDismiss={() => setShowBanner(false)} onTap={() => { setShowBanner(false); setLastSeenPlate(pickedPlate); setScreen('notification'); }} />}
+      {showBanner && screen !== 'notification' && <AppleNotifBanner childName={childName} pickedPlate={pickedPlate} plateHistory={plateHistory} onDismiss={() => setShowBanner(false)} onTap={() => { setShowBanner(false); setLastSeenPlate(pickedPlate); setScreen('notification'); }} />}
       {screen !== 'welcome' && screen !== 'setup' && <CareTabBar active={screen} onTab={(tab) => { if (tab === 'settings') { setSettingsOpen(true); return; } if (tab === 'notification') setLastSeenPlate(pickedPlate); setScreen(tab); }} hasActivity={hasUnseenActivity} />}
     </>
   );
@@ -2143,6 +2458,13 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
   <script type="text/babel">
     function App() {
       const urlRole = new URLSearchParams(window.location.search).get('role'); // 'child' | 'caretaker' | null
+      // ?reset clears the stored family code so the iPad can re-enter it
+      if (new URLSearchParams(window.location.search).get('reset') === '1') {
+        localStorage.removeItem('pyp_family_code');
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('reset');
+        window.history.replaceState(null, '', clean.toString());
+      }
       const isTouchDevice = navigator.maxTouchPoints > 0;
       const isPhone  = urlRole ? urlRole === 'caretaker' : window.innerWidth < 600;
       const isTablet = urlRole ? urlRole === 'child'     : isTouchDevice && window.innerWidth >= 600 && window.innerWidth < 1400;
@@ -2151,9 +2473,23 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
       const [sentMenu, setSentMenu] = React.useState(null);
       const [childName, setChildName] = React.useState(() => isTablet ? '' : (localStorage.getItem('pyp_childName') || ''));
       const [resetKey, setResetKey] = React.useState(0);
-      const [familyCode, setFamilyCode] = React.useState(() => localStorage.getItem('pyp_family_code') || null);
+      const [familyCode, setFamilyCode] = React.useState(() => {
+        const raw = localStorage.getItem('pyp_family_code');
+        if (!raw) return null;
+        const normalized = raw.toUpperCase();
+        if (normalized !== raw) localStorage.setItem('pyp_family_code', normalized);
+        return normalized;
+      });
       const [codeInput, setCodeInput] = React.useState('');
       const [childPushSub, setChildPushSub] = React.useState(null);
+      const childNameRef = React.useRef(childName);
+      React.useEffect(() => { childNameRef.current = childName; if (!isTablet && childName) localStorage.setItem('pyp_childName', childName); }, [childName]);
+
+      // Analytics: identify user by family code whenever it is set
+      React.useEffect(() => {
+        if (!familyCode) return;
+        try { window.posthog && window.posthog.identify(familyCode, { child_name: childName || undefined, role: isTablet ? 'child' : 'caretaker' }); } catch(e) {}
+      }, [familyCode, childName]);
 
       // Parent: generate family code server-side on first use
       React.useEffect(() => {
@@ -2161,7 +2497,7 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
         __getToken().then(token =>
           fetch('/api/create-session', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } })
             .then(r => r.json())
-            .then(({ code }) => { if (code) { localStorage.setItem('pyp_family_code', code); setFamilyCode(code); } })
+            .then(({ code }) => { if (code) { const up = code.toUpperCase(); localStorage.setItem('pyp_family_code', up); setFamilyCode(up); } })
         ).catch(() => {
           const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
           const code = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => chars[b % chars.length]).join('');
@@ -2170,17 +2506,24 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
       }, []);
 
       // Tablet: subscribe to Firestore for menu/reset; announce presence on connect
+      const [fsStatus, setFsStatus] = React.useState('connecting'); // 'connecting' | 'ok' | 'error'
       React.useEffect(() => {
         if (!isTablet || !familyCode || !window.__db) return;
-        setTimeout(() => window.__db.collection('sessions').doc(familyCode).set({ childReady: true, childReadyAt: new Date() }, { merge: true }).catch(() => {}), 800);
-        const unsub = window.__db.collection('sessions').doc(familyCode).onSnapshot(doc => {
-          if (!doc.exists) { setSentMenu(null); return; }
-          const d = doc.data();
-          if (d.childName) { setChildName(d.childName); localStorage.setItem('pyp_childName', d.childName); }
-          if (d.status === 'pending' && d.menu) { setSentMenu(d.menu); }
-          if (d.status === 'reset') { localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); setChildName(''); setSentMenu(null); setResetKey(k => k + 1); }
-        }, () => {});
-        return unsub;
+        let unsub = null;
+        let cancelled = false;
+        (window.__authReady || Promise.resolve()).then(() => {
+          if (cancelled) return;
+          window.__db.collection('sessions').doc(familyCode).set({ childReady: true, childReadyAt: new Date() }, { merge: true }).catch(() => {});
+          unsub = window.__db.collection('sessions').doc(familyCode).onSnapshot(doc => {
+            setFsStatus('ok');
+            if (!doc.exists) { setSentMenu(null); return; }
+            const d = doc.data();
+            if (d.childName) { setChildName(d.childName); localStorage.setItem('pyp_childName', d.childName); }
+            if (d.status === 'pending' && d.menu) { setSentMenu(d.menu); }
+            if (d.status === 'reset') { localStorage.removeItem('pyp_childName'); localStorage.removeItem('pyp_lastMenu'); setChildName(''); setSentMenu(null); setResetKey(k => k + 1); }
+          }, (err) => { setFsStatus('error'); console.error('[PYP] Firestore error:', err); });
+        });
+        return () => { cancelled = true; if (unsub) unsub(); };
       }, [familyCode]);
 
       // Tablet: request push permission and register subscription
@@ -2222,7 +2565,7 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
           }
           // always process childReady — including on first snapshot so tablet reconnects are never missed
           if (d.childReady) {
-            const name = localStorage.getItem('pyp_childName') || '';
+            const name = childNameRef.current || localStorage.getItem('pyp_childName') || '';
             const raw = localStorage.getItem('pyp_lastMenu');
             const update = { childReady: false };
             if (raw) {
@@ -2241,7 +2584,7 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
 
       const handleSendMenu = (menuData) => {
         const items = Array.isArray(menuData) ? menuData : (menuData.items || []);
-        const name = localStorage.getItem('pyp_childName') || '';
+        const name = childNameRef.current || localStorage.getItem('pyp_childName') || '';
         setChildName(name); setSentMenu(items); setPickedPlate(null);
         localStorage.setItem('pyp_lastMenu', JSON.stringify({ menu: items, sentAt: Date.now() }));
         if (window.__db && familyCode) {
@@ -2293,7 +2636,7 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
                 <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 28, fontWeight: 500, color: '#2a241c', marginBottom: 8 }}>Enter family code</div>
                 <div style={{ fontFamily: 'Nunito, system-ui', fontSize: 15, color: '#8a7c66', marginBottom: 28, lineHeight: 1.5 }}>Ask the parent to open Settings in their app to find the code.</div>
                 <input value={codeInput} onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} placeholder="ABC123" style={{ width: '100%', padding: '18px', fontSize: 26, textAlign: 'center', fontFamily: 'Nunito, system-ui', fontWeight: 700, letterSpacing: 6, borderRadius: 14, border: '2px solid #d8cfc0', outline: 'none', marginBottom: 14, background: '#fff' }} />
-                <button onClick={() => { const c = codeInput.trim(); if (c.length === 6) { localStorage.setItem('pyp_family_code', c); setFamilyCode(c); __getToken().then(token => fetch('/api/join-family', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ code: c }) })).catch(() => {}); } }} disabled={codeInput.length < 6} style={{ width: '100%', padding: '16px', background: codeInput.length === 6 ? '#4a7c59' : '#c0b8a8', color: '#fff', border: 'none', borderRadius: 14, fontFamily: 'Nunito, system-ui', fontSize: 17, fontWeight: 700, cursor: codeInput.length === 6 ? 'pointer' : 'default', transition: 'background .15s' }}>Connect</button>
+                <button onClick={() => { const c = codeInput.trim(); if (c.length === 6) { localStorage.setItem('pyp_family_code', c); setFamilyCode(c); window.pypTrack('child_connected', { family_code: c }); __getToken().then(token => fetch('/api/join-family', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ code: c }) })).catch(() => {}); } }} disabled={codeInput.length < 6} style={{ width: '100%', padding: '16px', background: codeInput.length === 6 ? '#4a7c59' : '#c0b8a8', color: '#fff', border: 'none', borderRadius: 14, fontFamily: 'Nunito, system-ui', fontSize: 17, fontWeight: 700, cursor: codeInput.length === 6 ? 'pointer' : 'default', transition: 'background .15s' }}>Connect</button>
               </div>
             </div>
           );
@@ -2301,20 +2644,20 @@ Object.assign(window, { CaretakerApp, CareFrame, CARE_COLORS });
           return (
             <div style={{ position: 'fixed', inset: 0, background: '#f6efe2', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
-                <ChildApp key={resetKey} childName={childName} onSubmit={handlePickedPlate} sentMenu={sentMenu} onResetCode={() => { localStorage.removeItem('pyp_family_code'); setFamilyCode(null); }} />
+                <ChildApp key={resetKey} childName={childName} onSubmit={handlePickedPlate} sentMenu={sentMenu} onResetCode={() => { localStorage.removeItem('pyp_family_code'); setFamilyCode(null); }} fsStatus={fsStatus} />
               </div>
             </div>
           );
         }
 
-        return <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} standalone />;
+        return <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} onNewFamilyCode={(code) => setFamilyCode(code)} standalone />;
       }
 
       return (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 60, flexWrap: 'wrap', justifyContent: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Caretaker · iPhone</div>
-            <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} />
+            <CaretakerApp childName={childName} pickedPlate={pickedPlate} onSendMenu={handleSendMenu} onNameChange={handleNameChange} onReset={handleReset} onNewMenu={handleNewMenu} onNewFamilyCode={(code) => setFamilyCode(code)} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <div style={{ fontFamily: 'Inter, system-ui', fontSize: 13, fontWeight: 600, color: 'rgba(60,50,40,.5)', letterSpacing: .5, textTransform: 'uppercase' }}>Child · iPad</div>
